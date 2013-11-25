@@ -1,0 +1,8 @@
+/msvc/Debug
+/msvc/*.suo
+/msvc/*.user
+/msvc/*.ncb
+/bin/*.wad
+/bin/*.exe
+/bin/*.ilk
+/bin/*.pdb
