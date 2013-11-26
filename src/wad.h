@@ -45,7 +45,6 @@ public:
 
     wadHeader_t     header;
     lump_t          *lumps;
-    byte            **lumpcache;
     unsigned int    size;
 
     lump_t          *GetLumpFromName(const char *name);

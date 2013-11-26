@@ -49,8 +49,6 @@ bool kexWadFile::Open(const char *fileName) {
 
     memcpy(&header, file.Buffer(), sizeof(wadHeader_t));
     lumps = (lump_t*)file.GetOffset(2);
-    lumpcache = (byte**)Mem_Calloc(sizeof(byte*) * header.lmpcount, hb_static);
-
     return true;
 }
 

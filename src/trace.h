@@ -22,40 +22,31 @@
 //    distribution.
 // 
 
-#ifndef __SURFACES_H__
-#define __SURFACES_H__
-
-typedef enum {
-    ST_UNKNOWN      = 0,
-    ST_MIDDLESEG,
-    ST_UPPERSEG,
-    ST_LOWERSEG,
-    ST_CEILING,
-    ST_FLOOR
-} surfaceType_t;
-
-// convert from fixed point(FRACUNIT) to floating point
-#define F(x)  (((float)(x))/65536.0f)
-
-typedef struct {
-    kexPlane        plane;
-    int             lightmapNum;
-    int             lightmapOffs[2];
-    int             lightmapDims[2];
-    kexVec3         lightmapOrigin;
-    kexVec3         lightmapSteps[2];
-    int             numVerts;
-    kexVec3         *verts;
-    float           *lightmapCoords;
-    surfaceType_t   type;
-    int             typeIndex;
-} surface_t;
-
-extern kexArray<surface_t*> surfaces;
+#ifndef __TRACE_H__
+#define __TRACE_H__
 
 class kexDoomMap;
-class kexWadFile;
 
-void Surface_AllocateFromMap(kexWadFile &wadFile, kexDoomMap &doomMap);
+class kexTrace {
+public:
+                        kexTrace(void);
+                        ~kexTrace(void);
+
+    void                Init(kexDoomMap &doomMap);
+    void                CheckPosition(const kexVec3 position);
+
+    kexVec3             start;
+    kexVec3             end;
+    kexVec3             dir;
+    kexVec3             hitNormal;
+    kexVec3             hitVector;
+    float               fraction;
+
+private:
+    void                RecursiveCheckPosition(int num);
+
+    kexDoomMap          *map;
+
+};
 
 #endif

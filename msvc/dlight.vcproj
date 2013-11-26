@@ -173,11 +173,23 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath="..\src\lightmap.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\main.cpp"
 				>
 			</File>
 			<File
+				RelativePath="..\src\mapData.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\surfaces.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\trace.cpp"
 				>
 			</File>
 			<File
@@ -251,11 +263,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\lightmap.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\mapData.h"
 				>
 			</File>
 			<File
 				RelativePath="..\src\surfaces.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\trace.h"
 				>
 			</File>
 			<File

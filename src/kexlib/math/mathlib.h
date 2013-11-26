@@ -70,8 +70,6 @@ public:
                                        const kexVec3 &point, kexVec3 *vec);
     static void             QuadraticCurve(const kexVec3 &start, const kexVec3 &end, const float time,
                                            const kexVec3 &pt1, const kexVec3 &pt2, kexVec3 *vec);
-
-    static void             InitObject(void);
 };
 
 class kexRand {
@@ -125,11 +123,6 @@ public:
     float                   y;
     float                   z;
     float                   w;
-
-    static void             ObjectConstruct1(kexQuat *thisq);
-    static void             ObjectConstruct2(float a, float x, float y, float z, kexVec3 *thisq);
-    static void             ObjectConstruct3(float a, kexVec3 &in, kexQuat *thisq);
-    static void             ObjectConstructCopy(const kexQuat &in, kexQuat *thisq);
 };
 
 class kexVec3 {
@@ -183,7 +176,7 @@ public:
     kexVec3                 &operator|=(const kexQuat &quat);
     kexVec3                 &operator|=(const kexMatrix &mtx);
     float                   operator[](int index) const;
-    float                   operator[](int index);
+    float                   &operator[](int index);
 
     operator                float *(void) { return reinterpret_cast<float*>(&x); }
 
@@ -194,10 +187,6 @@ public:
     float                   x;
     float                   y;
     float                   z;
-
-    static void             ObjectConstruct1(kexVec3 *thisvec);
-    static void             ObjectConstruct2(float x, float y, float z, kexVec3 *thisvec);
-    static void             ObjectConstructCopy(const kexVec3 &in, kexVec3 *thisvec);
 };
 
 class kexVec4 {
@@ -214,7 +203,7 @@ public:
     kexVec4                 operator|(const kexMatrix &mtx);
     kexVec4                 &operator|=(const kexMatrix &mtx);
     float                   operator[](int index) const;
-    float                   operator[](int index);
+    float                   &operator[](int index);
 
     float                   x;
     float                   y;
@@ -293,14 +282,6 @@ public:
     kexPlane                &operator|(const kexMatrix &mtx);
     kexPlane                &operator|=(const kexMatrix &mtx);
 
-    static void             ObjectConstruct(kexPlane *p);
-    static void             ObjectConstruct(const float a, const float b, const float c, const float d,
-                                            kexPlane *p);
-    static void             ObjectConstruct(const kexVec3 &pt1, const kexVec3 &pt2, const kexVec3 &pt3,
-                                            kexPlane *p);
-    static void             ObjectConstruct(const kexVec3 &normal, const kexVec3 &point, kexPlane *p);
-    static void             ObjectConstructCopy(const kexPlane &in, kexPlane *p);
-
     float                   a;
     float                   b;
     float                   c;
@@ -336,16 +317,11 @@ public:
     kexAngle                &operator=(const float *vecs);
     kexAngle                operator-(void);
     float                   operator[](int index) const;
-    float                   operator[](int index);
+    float                   &operator[](int index);
 
     float                   yaw;
     float                   pitch;
     float                   roll;
-
-    static void             ObjectConstruct1(kexAngle *an);
-    static void             ObjectConstruct2(const float a, const float b, const float c, kexAngle *an);
-    static void             ObjectConstruct3(const kexVec3 &vec, kexAngle *an);
-    static void             ObjectConstructCopy(const kexAngle &in, kexAngle *an);
 };
 
 class kexBBox {
