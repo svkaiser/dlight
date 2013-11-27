@@ -22,40 +22,37 @@
 //    distribution.
 // 
 
-#ifndef __SURFACES_H__
-#define __SURFACES_H__
+#ifndef __LIGHTMAP_H__
+#define __LIGHTMAP_H__
+
+#include "surfaces.h"
 
 typedef enum {
-    ST_UNKNOWN      = 0,
-    ST_MIDDLESEG,
-    ST_UPPERSEG,
-    ST_LOWERSEG,
-    ST_CEILING,
-    ST_FLOOR
-} surfaceType_t;
+    AXIS_YZ     = 0,
+    AXIS_XZ,
+    AXIS_XY
+} lightmapAxis_t;
 
-// convert from fixed point(FRACUNIT) to floating point
-#define F(x)  (((float)(x))/65536.0f)
+class kexLightmapBuilder {
+public:
+                        kexLightmapBuilder(void);
+                        ~kexLightmapBuilder(void);
 
-typedef struct {
-    kexPlane        plane;
-    int             lightmapNum;
-    int             lightmapOffs[2];
-    int             lightmapDims[2];
-    kexVec3         lightmapOrigin;
-    kexVec3         lightmapSteps[2];
-    int             numVerts;
-    kexVec3         *verts;
-    float           *lightmapCoords;
-    surfaceType_t   type;
-    int             typeIndex;
-} surface_t;
+    void                NewTexture(void);
+    bool                MakeRoomForBlock(const int width, const int height, int *x, int *y);
 
-extern kexArray<surface_t*> surfaces;
+private:
+    kexBBox             GetBoundsFromSurface(const surface_t *surface);
+    void                BuildSurfaceParams(surface_t *surface);
+    void                TraceSurface(surface_t *surface);
 
-class kexDoomMap;
-class kexWadFile;
-
-void Surface_AllocateFromMap(kexWadFile &wadFile, kexDoomMap &doomMap);
+    kexArray<byte*>     textures;
+    int                 textureWidth;
+    int                 textureHeight;
+    int                 *allocBlocks;
+    int                 numTextures;
+    int                 samples;
+    int                 extraSamples;
+};
 
 #endif

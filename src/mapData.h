@@ -25,103 +25,151 @@
 #ifndef __MAPDATA_H__
 #define __MAPDATA_H__
 
-#define ML_BLOCKING             1               // Solid, is an obstacle.
-#define ML_BLOCKMONSTERS        2               // Blocks monsters only.
-#define ML_TWOSIDED             4               // Backside will not be present at all if not two sided.
+#include "wad.h"
+#include "surfaces.h"
+
+typedef enum {
+    ML_BLOCKING             = 1,    // Solid, is an obstacle.
+    ML_BLOCKMONSTERS        = 2,    // Blocks monsters only.
+    ML_TWOSIDED             = 4     // Backside will not be present at all if not two sided.
+} mapFlags_t;
 
 typedef struct {
-    int         x;
-    int         y;
+    int             x;
+    int             y;
 } mapVertex_t;
 
 typedef struct {
-    short	    textureoffset;
-    short	    rowoffset;
-    word	    toptexture;
-    word	    bottomtexture;
-    word	    midtexture;
-    short	    sector;
+    short           textureoffset;
+    short           rowoffset;
+    word            toptexture;
+    word            bottomtexture;
+    word            midtexture;
+    short           sector;
 } mapSideDef_t;
 
 #define NO_SIDE_INDEX   ((word)-1)
 
 typedef struct {
-    word        v1;
-    word        v2;
-    int         flags;
-    short       special;
-    short       tag;
+    word            v1;
+    word            v2;
+    int             flags;
+    short           special;
+    short           tag;
     //
     // support more than 32768 sidedefs
     // use the unsigned value and special case the -1
     // sidenum[1] will be -1 (NO_INDEX) if one sided
     //
-    word        sidenum[2]; // sidenum[1] will be -1 if one sided
+    word            sidenum[2]; // sidenum[1] will be -1 if one sided
 } mapLineDef_t;
 
-typedef	struct {
-    short	    floorheight;
-    short	    ceilingheight;
-    word	    floorpic;
-    word	    ceilingpic;
-    word	    colors[5];
-    short	    special;
-    short	    tag;
-    word	    flags;
+typedef struct {
+    short           floorheight;
+    short           ceilingheight;
+    word            floorpic;
+    word            ceilingpic;
+    word            colors[5];
+    short           special;
+    short           tag;
+    word            flags;
 } mapSector_t;
 
-#define	NF_SUBSECTOR 0x8000
+#define NF_SUBSECTOR 0x8000
 
 typedef struct {
     // Partition line from (x,y) to x+dx,y+dy)
-    short	    x;
-    short	    y;
-    short	    dx;
-    short	    dy;
+    short           x;
+    short           y;
+    short           dx;
+    short           dy;
     
     // Bounding box for each child,
     // clip against view frustum.
-    short	    bbox[2][4];
+    short           bbox[2][4];
     
     // If NF_SUBSECTOR its a subsector,
     // else it's a node of another subtree.
-    word	    children[2];
-    
+    word            children[2];
 } mapNode_t;
 
 typedef struct {
-    word        v1;
-    word        v2;
-    short	    angle;
-    word        linedef;
-    short	    side;
-    short	    offset;
+    word            v1;
+    word            v2;
+    short           angle;
+    word            linedef;
+    short           side;
+    short           offset;
 } mapSeg_t;
 
 typedef struct {
-    word        numsegs;
-    word        firstseg;
+    word            numsegs;
+    word            firstseg;
 } mapSubSector_t;
 
 typedef struct {
-    short	    x;
-    short	    y;
-    short	    z;
-    short	    angle;
-    short	    type;
-    short	    options;
-    short	    tid;
+    short           x;
+    short           y;
+    short           z;
+    short           angle;
+    short           type;
+    short           options;
+    short           tid;
 } mapThing_t;
 
 typedef struct {
-    float       normal[3];
-    int         lightmapNum;
-    int         lightmapOffs[2];
-    int         lightmapDims[2];
-    float       lightmapOrigin[3];
-    float       lightmapSteps[3][3];
-    float       textureCoords[2];
-    int         type;
+    mapVertex_t     *vertex;
+    mapSeg_t        *seg;
+} leaf_t;
+
+typedef struct {
+    float           normal[3];
+    int             lightmapNum;
+    int             lightmapOffs[2];
+    int             lightmapDims[2];
+    float           lightmapOrigin[3];
+    float           lightmapSteps[3][2];
+    float           textureCoords[2];
+    int             type;
+    int             typeIndex;
+    int             lightmapCoordOffset;
 } mapSurface_t;
+
+class kexDoomMap {
+public:
+                    kexDoomMap(void);
+                    ~kexDoomMap(void);
+
+    void            BuildMapFromWad(kexWadFile &wadFile);
+    mapSideDef_t    *GetSideDef(const mapSeg_t *seg);
+    mapSector_t     *GetFrontSector(const mapSeg_t *seg);
+    mapSector_t     *GetBackSector(const mapSeg_t *seg);
+
+    mapLineDef_t    *mapLines;
+    int             numLines;
+    mapVertex_t     *mapVerts;
+    int             numVerts;
+    mapSideDef_t    *mapSides;
+    int             numSides;
+    mapSector_t     *mapSectors;
+    int             numSectors;
+    mapSeg_t        *mapSegs;
+    int             numSegs;
+    mapSubSector_t  *mapSSects;
+    int             numSSects;
+    mapNode_t       *nodes;
+    int             numNodes;
+    leaf_t          *leafs;
+    int             numLeafs;
+
+    int             *ssLeafLookup;
+    int             *ssLeafCount;
+
+    surface_t       **segSurfaces[3];
+    surface_t       **leafSurfaces[2];
+
+private:
+    void            BuildLeafs(kexWadFile &wadFile);
+};
 
 #endif

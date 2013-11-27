@@ -28,15 +28,15 @@
 #include "kexlib/binFile.h"
 
 typedef struct {
-    char		    id[4];
-    int			    lmpcount;
-    int			    lmpdirpos;
+    char            id[4];
+    int             lmpcount;
+    int             lmpdirpos;
 } wadHeader_t;
 
 typedef struct {
-    int			    filepos;
-    int			    size;
-    char		    name[8];
+    int             filepos;
+    int             size;
+    char            name[8];
 } lump_t;
 
 class kexWadFile {
@@ -44,9 +44,8 @@ public:
                     ~kexWadFile(void);
 
     wadHeader_t     header;
-	lump_t          *lumps;
-	byte            **lumpcache;
-	unsigned int    size;
+    lump_t          *lumps;
+    unsigned int    size;
 
     lump_t          *GetLumpFromName(const char *name);
     byte            *GetLumpData(const lump_t *lump);
