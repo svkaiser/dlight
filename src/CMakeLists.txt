@@ -7,8 +7,11 @@
 include_directories(${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/src/kexlib ${CMAKE_SOURCE_DIR}/src/kexlib/math)
 
 add_executable(dlight
+lightmap.cpp
 main.cpp
+mapData.cpp
 surfaces.cpp
+trace.cpp
 wad.cpp
 kexlib/binFile.cpp
 kexlib/kstring.cpp
