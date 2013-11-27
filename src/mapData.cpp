@@ -81,35 +81,14 @@ kexDoomMap::~kexDoomMap(void) {
 //
 
 void kexDoomMap::BuildMapFromWad(kexWadFile &wadFile) {
-    lump_t          *lump;
-
-    lump = wadFile.GetLumpFromName("VERTEXES");
-    mapVerts = (mapVertex_t*)wadFile.GetLumpData(lump);
-    numVerts = lump->size / sizeof(mapVertex_t);
-
-    lump = wadFile.GetLumpFromName("LINEDEFS");
-    mapLines = (mapLineDef_t*)wadFile.GetLumpData(lump);
-    numLines = lump->size / sizeof(mapLineDef_t);
-
-    lump = wadFile.GetLumpFromName("SIDEDEFS");
-    mapSides = (mapSideDef_t*)wadFile.GetLumpData(lump);
-    numSides = lump->size / sizeof(mapSideDef_t);
-
-    lump = wadFile.GetLumpFromName("SECTORS");
-    mapSectors = (mapSector_t*)wadFile.GetLumpData(lump);
-    numSectors = lump->size / sizeof(mapSector_t);
-
-    lump = wadFile.GetLumpFromName("SEGS");
-    mapSegs = (mapSeg_t*)wadFile.GetLumpData(lump);
-    numSegs = lump->size / sizeof(mapSeg_t);
-
-    lump = wadFile.GetLumpFromName("SSECTORS");
-    mapSSects = (mapSubSector_t*)wadFile.GetLumpData(lump);
-    numSSects = lump->size / sizeof(mapSubSector_t);
-
-    lump = wadFile.GetLumpFromName("NODES");
-    nodes = (mapNode_t*)wadFile.GetLumpData(lump);
-    numNodes = lump->size / sizeof(mapNode_t);
+    wadFile.GetMapLump<mapThing_t>("THINGS", &mapThings, &numThings);
+    wadFile.GetMapLump<mapVertex_t>("VERTEXES", &mapVerts, &numVerts);
+    wadFile.GetMapLump<mapLineDef_t>("LINEDEFS", &mapLines, &numLines);
+    wadFile.GetMapLump<mapSideDef_t>("SIDEDEFS", &mapSides, &numSides);
+    wadFile.GetMapLump<mapSector_t>("SECTORS", &mapSectors, &numSectors);
+    wadFile.GetMapLump<mapSeg_t>("SEGS", &mapSegs, &numSegs);
+    wadFile.GetMapLump<mapSubSector_t>("SSECTORS", &mapSSects, &numSSects);
+    wadFile.GetMapLump<mapNode_t>("NODES", &nodes, &numNodes);
 
     BuildLeafs(wadFile);
 }

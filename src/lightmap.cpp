@@ -28,9 +28,11 @@
 //-----------------------------------------------------------------------------
 
 #include "common.h"
-#include "lightmap.h"
 #include "surfaces.h"
 #include "trace.h"
+#include "lightmap.h"
+
+#define EXPORT_TEXELS_OBJ
 
 //
 // kexLightmapBuilder::kexLightmapBuilder
@@ -121,28 +123,25 @@ bool kexLightmapBuilder::MakeRoomForBlock(const int width, const int height,
 //
 
 kexBBox kexLightmapBuilder::GetBoundsFromSurface(const surface_t *surface) {
-    float lowx = M_INFINITY;
-    float lowy = M_INFINITY;
-    float lowz = M_INFINITY;
-    float hix = -M_INFINITY;
-    float hiy = -M_INFINITY;
-    float hiz = -M_INFINITY;
+    kexVec3 low(M_INFINITY, M_INFINITY, M_INFINITY);
+    kexVec3 hi(-M_INFINITY, -M_INFINITY, -M_INFINITY);
 
     kexBBox bounds;
+    bounds.Clear();
 
     for(int i = 0; i < surface->numVerts; i++) {
         for(int j = 0; j < 3; j++) {
-            if(surface->verts[i][j] < lowx) {
-                lowx = surface->verts[i][j];
+            if(surface->verts[i][j] < low[j]) {
+                low[j] = surface->verts[i][j];
             }
-            if(surface->verts[i][j] > hix) {
-                hix = surface->verts[i][j];
+            if(surface->verts[i][j] > hi[j]) {
+                hi[j] = surface->verts[i][j];
             }
         }
     }
 
-    bounds.min.Set(lowx, lowy, lowz);
-    bounds.max.Set(hix, hiy, hiz);
+    bounds.min = low;
+    bounds.max = hi;
 
     return bounds;
 }
@@ -269,8 +268,8 @@ void kexLightmapBuilder::BuildSurfaceParams(surface_t *surface) {
     surface->lightmapOffs[0] = x;
     surface->lightmapOffs[1] = y;
     surface->lightmapOrigin = tOrigin;
-    surface->lightmapSteps[0] = tCoords[0];
-    surface->lightmapSteps[1] = tCoords[1];
+    surface->lightmapSteps[0] = tCoords[0] * (float)samples;
+    surface->lightmapSteps[1] = tCoords[1] * (float)samples;
 }
 
 //
@@ -300,21 +299,61 @@ void kexLightmapBuilder::TraceSurface(surface_t *surface) {
 
     normal = surface->plane.Normal();
 
-    for(i = 0; i < sampleWidth; i++) {
-        for(j = 0; j < sampleHeight; j++) {
+#ifdef EXPORT_TEXELS_OBJ
+    FILE *f = fopen("texels.obj", "w");
+    int indices = 0;
+#endif
+
+    for(i = 0; i < sampleHeight; i++) {
+        for(j = 0; j < sampleWidth; j++) {
             pos.x = surface->lightmapOrigin.x + normal.x +
-                i * surface->lightmapSteps[0].x +
-                j * surface->lightmapSteps[1].x;
+                j * surface->lightmapSteps[0].x +
+                i * surface->lightmapSteps[1].x;
             pos.y = surface->lightmapOrigin.y + normal.y +
-                i * surface->lightmapSteps[0].y +
-                j * surface->lightmapSteps[1].y;
+                j * surface->lightmapSteps[0].y +
+                i * surface->lightmapSteps[1].y;
             pos.z = surface->lightmapOrigin.z + normal.z +
-                i * surface->lightmapSteps[0].z +
-                j * surface->lightmapSteps[1].z;
+                j * surface->lightmapSteps[0].z +
+                i * surface->lightmapSteps[1].z;
+
+#ifdef EXPORT_TEXELS_OBJ
+            ExportTexelsToObjFile(f, pos, indices);
+            indices += 8;
+#endif
+
+            // TODO
         }
     }
+
+#ifdef EXPORT_TEXELS_OBJ
+    fclose(f);
+#endif
 
     // TODO
 
     Mem_GC();
+}
+
+//
+// kexLightmapBuilder::ExportTexelsToObjFile
+//
+
+void kexLightmapBuilder::ExportTexelsToObjFile(FILE *f, const kexVec3 &org, int indices) {
+#define BLOCK(idx, offs) (org[idx] + offs)/256.0f
+    fprintf(f, "o texel_%03d\n", indices);
+    fprintf(f, "v %f %f %f\n", -BLOCK(1, -6), BLOCK(2, -6), -BLOCK(0, 6));
+    fprintf(f, "v %f %f %f\n", -BLOCK(1, -6), BLOCK(2, 6), -BLOCK(0, 6));
+    fprintf(f, "v %f %f %f\n", -BLOCK(1, -6), BLOCK(2, 6), -BLOCK(0, -6));
+    fprintf(f, "v %f %f %f\n", -BLOCK(1, -6), BLOCK(2, -6), -BLOCK(0, -6));
+    fprintf(f, "v %f %f %f\n", -BLOCK(1, 6), BLOCK(2, -6), -BLOCK(0, 6));
+    fprintf(f, "v %f %f %f\n", -BLOCK(1, 6), BLOCK(2, 6), -BLOCK(0, 6));
+    fprintf(f, "v %f %f %f\n", -BLOCK(1, 6), BLOCK(2, 6), -BLOCK(0, -6));
+    fprintf(f, "v %f %f %f\n", -BLOCK(1, 6), BLOCK(2, -6), -BLOCK(0, -6));
+    fprintf(f, "f %i %i %i %i\n", indices+1, indices+2, indices+3, indices+4);
+    fprintf(f, "f %i %i %i %i\n", indices+5, indices+8, indices+7, indices+6);
+    fprintf(f, "f %i %i %i %i\n", indices+1, indices+5, indices+6, indices+2);
+    fprintf(f, "f %i %i %i %i\n", indices+2, indices+6, indices+7, indices+3);
+    fprintf(f, "f %i %i %i %i\n", indices+3, indices+7, indices+8, indices+4);
+    fprintf(f, "f %i %i %i %i\n\n", indices+5, indices+1, indices+4, indices+8);
+#undef BLOCK
 }

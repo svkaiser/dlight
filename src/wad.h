@@ -53,6 +53,13 @@ public:
     bool            Open(const char *fileName);
     void            Close(void);
 
+    template<typename type>
+    void            GetMapLump(const char *name, type **ptr, int *count) {
+        lump_t *lump = GetLumpFromName(name);
+        *ptr = (type*)GetLumpData(lump);
+        *count = lump->size / sizeof(type);
+    }
+
 private:
     kexBinFile      file;
 };

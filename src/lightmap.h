@@ -33,18 +33,23 @@ typedef enum {
     AXIS_XY
 } lightmapAxis_t;
 
+class kexTrace;
+
 class kexLightmapBuilder {
 public:
                         kexLightmapBuilder(void);
                         ~kexLightmapBuilder(void);
 
-    void                NewTexture(void);
-    bool                MakeRoomForBlock(const int width, const int height, int *x, int *y);
-
-private:
-    kexBBox             GetBoundsFromSurface(const surface_t *surface);
     void                BuildSurfaceParams(surface_t *surface);
     void                TraceSurface(surface_t *surface);
+
+    kexTrace            trace;
+
+private:
+    void                NewTexture(void);
+    bool                MakeRoomForBlock(const int width, const int height, int *x, int *y);
+    kexBBox             GetBoundsFromSurface(const surface_t *surface);
+    void                ExportTexelsToObjFile(FILE *f, const kexVec3 &org, int indices);
 
     kexArray<byte*>     textures;
     int                 textureWidth;

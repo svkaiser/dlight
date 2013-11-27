@@ -32,6 +32,7 @@
 #include "mapData.h"
 #include "surfaces.h"
 #include "trace.h"
+#include "lightmap.h"
 
 //
 // isDigit
@@ -76,6 +77,7 @@ void Error(char *error, ...) {
 int main(int argc, char **argv) {
     kexWadFile wadFile;
     kexDoomMap doomMap;
+    kexLightmapBuilder builder;
 
     if(!argv[1]) {
         return 0;
@@ -86,6 +88,11 @@ int main(int argc, char **argv) {
     }
 
     Surface_AllocateFromMap(wadFile, doomMap);
+    builder.trace.Init(doomMap);
+
+    // TEMP/TESTING
+    //builder.BuildSurfaceParams(surfaces[18]);
+    //builder.TraceSurface(surfaces[18]);
 
     Mem_Purge(hb_static);
 

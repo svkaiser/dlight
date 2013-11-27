@@ -31,7 +31,7 @@
 #include "surfaces.h"
 #include "mapData.h"
 
-//#define EXPORT_OBJ
+#define EXPORT_OBJ
 
 kexArray<surface_t*> surfaces;
 
@@ -73,8 +73,8 @@ static void Surface_AllocateFromSeg(kexDoomMap &doomMap, mapSeg_t *seg) {
                 surf->verts[0].y = surf->verts[2].y = F(doomMap.mapVerts[seg->v1].y);
                 surf->verts[1].x = surf->verts[3].x = F(doomMap.mapVerts[seg->v2].x);
                 surf->verts[1].y = surf->verts[3].y = F(doomMap.mapVerts[seg->v2].y);
-                surf->verts[0].z = surf->verts[1].z = bBottom;
-                surf->verts[2].z = surf->verts[3].z = bottom;
+                surf->verts[0].z = surf->verts[1].z = bottom;
+                surf->verts[2].z = surf->verts[3].z = bBottom;
 
                 surf->plane.SetNormal(surf->verts[0], surf->verts[1], surf->verts[2]);
                 surf->plane.SetDistance(surf->verts[0]);
@@ -100,8 +100,8 @@ static void Surface_AllocateFromSeg(kexDoomMap &doomMap, mapSeg_t *seg) {
                 surf->verts[0].y = surf->verts[2].y = F(doomMap.mapVerts[seg->v1].y);
                 surf->verts[1].x = surf->verts[3].x = F(doomMap.mapVerts[seg->v2].x);
                 surf->verts[1].y = surf->verts[3].y = F(doomMap.mapVerts[seg->v2].y);
-                surf->verts[0].z = surf->verts[1].z = top;
-                surf->verts[2].z = surf->verts[3].z = bTop;
+                surf->verts[0].z = surf->verts[1].z = bTop;
+                surf->verts[2].z = surf->verts[3].z = top;
 
                 surf->plane.SetNormal(surf->verts[0], surf->verts[1], surf->verts[2]);
                 surf->plane.SetDistance(surf->verts[0]);
@@ -127,8 +127,8 @@ static void Surface_AllocateFromSeg(kexDoomMap &doomMap, mapSeg_t *seg) {
         surf->verts[0].y = surf->verts[2].y = F(doomMap.mapVerts[seg->v1].y);
         surf->verts[1].x = surf->verts[3].x = F(doomMap.mapVerts[seg->v2].x);
         surf->verts[1].y = surf->verts[3].y = F(doomMap.mapVerts[seg->v2].y);
-        surf->verts[0].z = surf->verts[1].z = top;
-        surf->verts[2].z = surf->verts[3].z = bottom;
+        surf->verts[0].z = surf->verts[1].z = bottom;
+        surf->verts[2].z = surf->verts[3].z = top;
 
         surf->plane.SetNormal(surf->verts[0], surf->verts[1], surf->verts[2]);
         surf->plane.SetDistance(surf->verts[0]);
@@ -143,6 +143,9 @@ static void Surface_AllocateFromSeg(kexDoomMap &doomMap, mapSeg_t *seg) {
 
 //
 // Surface_AllocateFromLeaf
+//
+// Plane normals should almost always be known
+// unless slopes are involved....
 //
 
 static void Surface_AllocateFromLeaf(kexDoomMap &doomMap) {
@@ -162,6 +165,7 @@ static void Surface_AllocateFromLeaf(kexDoomMap &doomMap) {
             continue;
         }
 
+        // try to find a sector that the subsector belongs to
         for(j = 0; j < doomMap.mapSSects[i].numsegs; j++) {
             mapSeg_t *seg = &doomMap.mapSegs[doomMap.mapSSects[i].firstseg + j];
             if(seg->side != -1) {
@@ -170,20 +174,27 @@ static void Surface_AllocateFromLeaf(kexDoomMap &doomMap) {
             }
         }
 
+        // I will be NOT surprised if some users tries to do something stupid with
+        // sector hacks
+        if(sector == NULL) {
+            Error("Surface_AllocateFromLeaf: subsector %i has no sector\n", i);
+            return;
+        }
+
         surf = (surface_t*)Mem_Calloc(sizeof(surface_t), hb_static);
         surf->numVerts = doomMap.ssLeafCount[i];
         surf->verts = (kexVec3*)Mem_Calloc(sizeof(kexVec3) * surf->numVerts, hb_static);
 
         // floor verts
         for(j = 0; j < surf->numVerts; j++) {
-            leaf = &doomMap.leafs[doomMap.ssLeafLookup[i] + j];
+            leaf = &doomMap.leafs[doomMap.ssLeafLookup[i] + (surf->numVerts - 1) - j];
 
             surf->verts[j].x = F(leaf->vertex->x);
             surf->verts[j].y = F(leaf->vertex->y);
             surf->verts[j].z = sector->floorheight;
         }
 
-        surf->plane.SetNormal(surf->verts[0], surf->verts[1], surf->verts[2]);
+        surf->plane.SetNormal(kexVec3(0, 0, 1));
         surf->plane.SetDistance(surf->verts[0]);
         surf->type = ST_FLOOR;
         surf->typeIndex = i;
@@ -198,14 +209,14 @@ static void Surface_AllocateFromLeaf(kexDoomMap &doomMap) {
 
         // ceiling verts
         for(j = 0; j < surf->numVerts; j++) {
-            leaf = &doomMap.leafs[doomMap.ssLeafLookup[i] + (surf->numVerts - 1) - j];
+            leaf = &doomMap.leafs[doomMap.ssLeafLookup[i] + j];
 
             surf->verts[j].x = F(leaf->vertex->x);
             surf->verts[j].y = F(leaf->vertex->y);
             surf->verts[j].z = sector->ceilingheight;
         }
 
-        surf->plane.SetNormal(surf->verts[0], surf->verts[1], surf->verts[2]);
+        surf->plane.SetNormal(kexVec3(0, 0, -1));
         surf->plane.SetDistance(surf->verts[0]);
         surf->type = ST_CEILING;
         surf->typeIndex = i;
@@ -236,22 +247,22 @@ void Surface_AllocateFromMap(kexWadFile &wadFile, kexDoomMap &doomMap) {
 
 #ifdef EXPORT_OBJ
     FILE *f = fopen("temp.obj", "w");
-    fprintf(f, "o object1\n");
     int curLen = surfaces.Length();
     for(unsigned int i = 0; i < surfaces.Length(); i++) {
         for(int j = 0; j < surfaces[i]->numVerts; j++) {
             fprintf(f, "v %f %f %f\n",
-                surfaces[i]->verts[j].x / 256.0f,
+                -surfaces[i]->verts[j].y / 256.0f,
                 surfaces[i]->verts[j].z / 256.0f,
-                surfaces[i]->verts[j].y / 256.0f);
+                -surfaces[i]->verts[j].x / 256.0f);
         }
     }
 
     int tri;
 
     for(unsigned int i = 0; i < surfaces.Length(); i++) {
+        fprintf(f, "o surf%i_seg%i\n", i, i);
         fprintf(f, "f %i %i %i\n", 0+(i*4)+1, 1+(i*4)+1, 2+(i*4)+1);
-        fprintf(f, "f %i %i %i\n", 3+(i*4)+1, 2+(i*4)+1, 1+(i*4)+1);
+        fprintf(f, "f %i %i %i\n", 1+(i*4)+1, 3+(i*4)+1, 2+(i*4)+1);
 
         tri = 3+(i*4)+1;
     }
@@ -262,18 +273,17 @@ void Surface_AllocateFromMap(kexWadFile &wadFile, kexDoomMap &doomMap) {
     Surface_AllocateFromLeaf(doomMap);
 
 #ifdef EXPORT_OBJ
-    fprintf(f, "o object2\n");
-
     for(unsigned int i = curLen; i < surfaces.Length(); i++) {
         for(int j = 0; j < surfaces[i]->numVerts; j++) {
             fprintf(f, "v %f %f %f\n",
-                surfaces[i]->verts[j].x / 256.0f,
+                -surfaces[i]->verts[j].y / 256.0f,
                 surfaces[i]->verts[j].z / 256.0f,
-                surfaces[i]->verts[j].y / 256.0f);
+                -surfaces[i]->verts[j].x / 256.0f);
         }
     }
 
     for(unsigned int i = curLen; i < surfaces.Length(); i++) {
+        fprintf(f, "o surf%i_ssect%i\n", i, i - curLen);
         fprintf(f, "f ");
         for(int j = 0; j < surfaces[i]->numVerts; j++) {
             fprintf(f, "%i ", tri++);

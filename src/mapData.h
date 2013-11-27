@@ -145,21 +145,24 @@ public:
     mapSector_t     *GetFrontSector(const mapSeg_t *seg);
     mapSector_t     *GetBackSector(const mapSeg_t *seg);
 
+    mapThing_t      *mapThings;
     mapLineDef_t    *mapLines;
-    int             numLines;
     mapVertex_t     *mapVerts;
-    int             numVerts;
     mapSideDef_t    *mapSides;
-    int             numSides;
     mapSector_t     *mapSectors;
-    int             numSectors;
     mapSeg_t        *mapSegs;
-    int             numSegs;
     mapSubSector_t  *mapSSects;
-    int             numSSects;
     mapNode_t       *nodes;
-    int             numNodes;
     leaf_t          *leafs;
+
+    int             numThings;
+    int             numLines;
+    int             numVerts;
+    int             numSides;
+    int             numSectors;
+    int             numSegs;
+    int             numSSects;
+    int             numNodes;
     int             numLeafs;
 
     int             *ssLeafLookup;
