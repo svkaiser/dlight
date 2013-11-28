@@ -156,6 +156,7 @@ public:
     kexVec3                 operator+(const kexVec3 &vec);
     kexVec3                 operator+(const kexVec3 &vec) const;
     kexVec3                 operator+(kexVec3 &vec);
+    kexVec3                 operator+(const float val);
     kexVec3                 operator-(void) const;
     kexVec3                 operator-(const kexVec3 &vec) const;
     kexVec3                 operator*(const kexVec3 &vec);
@@ -168,6 +169,7 @@ public:
     kexVec3                 &operator=(const kexVec3 &vec);
     kexVec3                 &operator=(const float *vecs);
     kexVec3                 &operator+=(const kexVec3 &vec);
+    kexVec3                 &operator+=(const float val);
     kexVec3                 &operator-=(const kexVec3 &vec);
     kexVec3                 &operator*=(const kexVec3 &vec);
     kexVec3                 &operator*=(const float val);

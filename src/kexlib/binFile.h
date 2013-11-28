@@ -59,6 +59,7 @@ public:
 
     FILE                *Handle(void) const { return handle; }
     byte                *Buffer(void) const { return buffer; }
+    void                SetBuffer(byte *ptr) { buffer = ptr; }
     byte                *BufferAt(void) const { return &buffer[bufferOffset]; }
     bool                Opened(void) const { return bOpened; }
     void                SetOffset(const int offset) { bufferOffset = offset; }

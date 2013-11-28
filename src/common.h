@@ -88,5 +88,6 @@ typedef union
 #include "kexlib/math/mathlib.h"
 
 void Error(char *error, ...);
+char *Va(char *str, ...);
 
 #endif

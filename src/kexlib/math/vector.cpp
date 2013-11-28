@@ -162,8 +162,8 @@ kexVec3 &kexVec3::Normalize(void) {
 //
 
 kexVec3 kexVec3::PointAt(kexVec3 &location) const {
-    float an1 = (float)atan2(location.x - x, location.z - z);
-    float an2 = (float)atan2(location.Distance(*this), location.y - y);
+    float an1 = (float)atan2(location.x - x, location.y - y);
+    float an2 = (float)atan2(location.Distance(*this), location.z - z);
 
     return kexVec3(
         kexMath::Sin(an1),
@@ -200,7 +200,7 @@ kexQuat kexVec3::ToQuat(void) {
         return kexQuat();
 
     kexVec3 scv = *this * (1.0f / d);
-    float angle = kexMath::ACos(scv.z);
+    float angle = kexMath::ACos(scv.y);
 
     return kexQuat(angle, vecForward.Cross(scv).Normalize());
 }
@@ -210,12 +210,12 @@ kexQuat kexVec3::ToQuat(void) {
 //
 
 float kexVec3::ToYaw(void) const {
-    float d = x * x + z * z;
+    float d = x * x + y * y;
 
     if(d == 0.0f)
         return 0.0f;
 
-    float an = -(z / kexMath::Sqrt(d));
+    float an = -(y / kexMath::Sqrt(d));
 
     if(an >  1.0f) an =  1.0f;
     if(an < -1.0f) an = -1.0f;
@@ -237,7 +237,7 @@ float kexVec3::ToPitch(void) const {
     if(d == 0.0f)
         return 0.0f;
         
-    return kexMath::ACos(y / kexMath::Sqrt(d));
+    return kexMath::ACos(z / kexMath::Sqrt(d));
 }
 
 //
@@ -316,6 +316,14 @@ kexVec3 kexVec3::operator+(kexVec3 &vec) {
 }
 
 //
+// kexVec3::operator+
+//
+
+kexVec3 kexVec3::operator+(const float val) {
+    return kexVec3(x + val, y + val, z + val);
+}
+
+//
 // kexVec3::operator+=
 //
 
@@ -323,6 +331,17 @@ kexVec3 &kexVec3::operator+=(const kexVec3 &vec) {
     x += vec.x;
     y += vec.y;
     z += vec.z;
+    return *this;
+}
+
+//
+// kexVec3::operator+=
+//
+
+kexVec3 &kexVec3::operator+=(const float val) {
+    x += val;
+    y += val;
+    z += val;
     return *this;
 }
 

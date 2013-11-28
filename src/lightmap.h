@@ -27,32 +27,48 @@
 
 #include "surfaces.h"
 
+#define LIGHTMAP_MAX_SIZE  1024
+
 typedef enum {
     AXIS_YZ     = 0,
     AXIS_XZ,
     AXIS_XY
 } lightmapAxis_t;
 
+class kexTrace;
+
 class kexLightmapBuilder {
 public:
-                        kexLightmapBuilder(void);
-                        ~kexLightmapBuilder(void);
+                            kexLightmapBuilder(void);
+                            ~kexLightmapBuilder(void);
 
-    void                NewTexture(void);
-    bool                MakeRoomForBlock(const int width, const int height, int *x, int *y);
+    void                    BuildSurfaceParams(surface_t *surface);
+    void                    TraceSurface(surface_t *surface);
+    void                    AddThingLights(kexDoomMap &doomMap);
+    void                    CreateLightmaps(kexDoomMap &doomMap);
+    void                    WriteTexturesToTGA(void);
+    byte                    *CreateLightmapLump(int *size);
+
+    kexTrace                trace;
 
 private:
-    kexBBox             GetBoundsFromSurface(const surface_t *surface);
-    void                BuildSurfaceParams(surface_t *surface);
-    void                TraceSurface(surface_t *surface);
+    void                    NewTexture(void);
+    bool                    MakeRoomForBlock(const int width, const int height, int *x, int *y);
+    kexBBox                 GetBoundsFromSurface(const surface_t *surface);
+    kexVec3                 LightTexelSample(const kexVec3 &origin, kexPlane &plane);
+    void                    ExportTexelsToObjFile(FILE *f, const kexVec3 &org, int indices);
 
-    kexArray<byte*>     textures;
-    int                 textureWidth;
-    int                 textureHeight;
-    int                 *allocBlocks;
-    int                 numTextures;
-    int                 samples;
-    int                 extraSamples;
+    mapLightInfo_t          *lightInfos;
+    kexArray<mapThing_t*>   thingLights;
+    kexArray<byte*>         textures;
+    byte                    *currentTexture;
+    int                     textureWidth;
+    int                     textureHeight;
+    int                     *allocBlocks;
+    int                     numTextures;
+    int                     samples;
+    int                     extraSamples;
+    int                     tracedTexels;
 };
 
 #endif

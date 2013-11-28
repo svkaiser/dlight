@@ -33,17 +33,20 @@ public:
                         ~kexTrace(void);
 
     void                Init(kexDoomMap &doomMap);
-    void                CheckPosition(const kexVec3 position);
+    void                Trace(const kexVec3 &startVec, const kexVec3 &endVec);
 
     kexVec3             start;
     kexVec3             end;
     kexVec3             dir;
     kexVec3             hitNormal;
     kexVec3             hitVector;
+    surface_t           *hitSurface;
     float               fraction;
 
 private:
-    void                RecursiveCheckPosition(int num);
+    void                TraceBSPNode(int num);
+    void                TraceSubSector(int num);
+    void                TraceSurface(surface_t *surface);
 
     kexDoomMap          *map;
 

@@ -139,7 +139,7 @@ kexPlane &kexPlane::SetDistance(const kexVec3 &point) {
 //
 
 bool kexPlane::IsFacing(const float yaw) {
-    return -kexMath::Sin(yaw) * a + -kexMath::Cos(yaw) * c < 0;
+    return -kexMath::Sin(yaw) * a + -kexMath::Cos(yaw) * b < 0;
 }
 
 //
@@ -151,7 +151,7 @@ float kexPlane::ToYaw(void) {
     
     if(d != 0) {
         float phi;
-        phi = kexMath::ACos(c / d);
+        phi = kexMath::ACos(b / d);
         if(a <= 0)
             phi = -phi;
 

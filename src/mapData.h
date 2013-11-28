@@ -28,6 +28,10 @@
 #include "wad.h"
 #include "surfaces.h"
 
+#define NO_SIDE_INDEX       ((word)-1)
+#define NF_SUBSECTOR        0x8000
+#define TYPE_LIGHTPOINT     16384
+
 typedef enum {
     ML_BLOCKING             = 1,    // Solid, is an obstacle.
     ML_BLOCKMONSTERS        = 2,    // Blocks monsters only.
@@ -47,8 +51,6 @@ typedef struct {
     word            midtexture;
     short           sector;
 } mapSideDef_t;
-
-#define NO_SIDE_INDEX   ((word)-1)
 
 typedef struct {
     word            v1;
@@ -74,8 +76,6 @@ typedef struct {
     short           tag;
     word            flags;
 } mapSector_t;
-
-#define NF_SUBSECTOR 0x8000
 
 typedef struct {
     // Partition line from (x,y) to x+dx,y+dy)
@@ -123,17 +123,9 @@ typedef struct {
 } leaf_t;
 
 typedef struct {
-    float           normal[3];
-    int             lightmapNum;
-    int             lightmapOffs[2];
-    int             lightmapDims[2];
-    float           lightmapOrigin[3];
-    float           lightmapSteps[3][2];
-    float           textureCoords[2];
-    int             type;
-    int             typeIndex;
-    int             lightmapCoordOffset;
-} mapSurface_t;
+    byte rgba[4];
+    short tag;
+} mapLightInfo_t;
 
 class kexDoomMap {
 public:
@@ -145,21 +137,26 @@ public:
     mapSector_t     *GetFrontSector(const mapSeg_t *seg);
     mapSector_t     *GetBackSector(const mapSeg_t *seg);
 
+    mapThing_t      *mapThings;
     mapLineDef_t    *mapLines;
-    int             numLines;
     mapVertex_t     *mapVerts;
-    int             numVerts;
     mapSideDef_t    *mapSides;
-    int             numSides;
     mapSector_t     *mapSectors;
-    int             numSectors;
     mapSeg_t        *mapSegs;
-    int             numSegs;
     mapSubSector_t  *mapSSects;
-    int             numSSects;
     mapNode_t       *nodes;
-    int             numNodes;
+    mapLightInfo_t  *lightInfos;
     leaf_t          *leafs;
+
+    int             numThings;
+    int             numLines;
+    int             numVerts;
+    int             numSides;
+    int             numSectors;
+    int             numSegs;
+    int             numSSects;
+    int             numNodes;
+    int             numLightInfos;
     int             numLeafs;
 
     int             *ssLeafLookup;
