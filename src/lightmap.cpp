@@ -30,9 +30,11 @@
 #include "common.h"
 #include "surfaces.h"
 #include "trace.h"
+#include "mapData.h"
 #include "lightmap.h"
+#include "kexlib/binFile.h"
 
-#define EXPORT_TEXELS_OBJ
+//#define EXPORT_TEXELS_OBJ
 
 //
 // kexLightmapBuilder::kexLightmapBuilder
@@ -45,6 +47,7 @@ kexLightmapBuilder::kexLightmapBuilder(void) {
     this->numTextures   = 0;
     this->samples       = 16;
     this->extraSamples  = 2;
+    this->tracedTexels  = 0;
 }
 
 //
@@ -52,6 +55,30 @@ kexLightmapBuilder::kexLightmapBuilder(void) {
 //
 
 kexLightmapBuilder::~kexLightmapBuilder(void) {
+}
+
+//
+// kexLightmapBuilder::AddThingLights
+//
+
+void kexLightmapBuilder::AddThingLights(kexDoomMap &doomMap) {
+    mapThing_t *thing;
+
+    printf("------------- Adding thing lights -------------\n");
+
+    for(int i = 0; i < doomMap.numThings; i++) {
+        thing = &doomMap.mapThings[i];
+
+        if(thing->type != TYPE_LIGHTPOINT) {
+            continue;
+        }
+
+        thingLights.Push(thing);
+        printf(".");
+    }
+
+    lightInfos = doomMap.lightInfos;
+    printf("\n");
 }
 
 //
@@ -66,6 +93,10 @@ void kexLightmapBuilder::NewTexture(void) {
     }
 
     memset(allocBlocks, 0, sizeof(int) * textureWidth);
+
+    byte *texture = (byte*)Mem_Calloc((textureWidth * textureHeight) * 3, hb_static);
+    textures.Push(texture);
+    currentTexture = texture;
 }
 
 //
@@ -147,6 +178,66 @@ kexBBox kexLightmapBuilder::GetBoundsFromSurface(const surface_t *surface) {
 }
 
 //
+// kexLightmapBuilder::LightTexelSample
+//
+
+kexVec3 kexLightmapBuilder::LightTexelSample(const kexVec3 &origin, kexPlane &plane) {
+    mapThing_t *light;
+    kexVec3 lightOrigin;
+    kexVec3 dir;
+    kexVec3 color;
+    int j;
+    float dist;
+    float radius;
+    float intensity;
+    float colorAdd;
+    mapLightInfo_t *lInfo;
+
+    color.Clear();
+
+    for(unsigned int i = 0; i < thingLights.Length(); i++) {
+        light = thingLights[i];
+        lightOrigin.Set(F(light->x << 16), F(light->y << 16), F(light->z << 16));
+
+        if(plane.Distance(lightOrigin) - plane.d < 0) {
+            continue;
+        }
+
+        dir = (lightOrigin - origin);
+        dist = dir.Unit();
+
+        dir.Normalize();
+
+        radius = light->angle;
+        lInfo = &lightInfos[light->options];
+        //intensity = lInfo->rgba[3];
+        intensity = 8;
+
+        if(intensity < 1.0f) {
+            intensity = 1.0f;
+        }
+
+        colorAdd = radius / (dist * dist) * plane.Normal().Dot(dir);
+
+        trace.Trace(lightOrigin, origin);
+
+        if(trace.fraction != 1) {
+            continue;
+        }
+
+        for(j = 0; j < 3; j++) {
+            color[j] += (colorAdd * ((float)lInfo->rgba[j] / 255.0f)) * intensity;
+            if(color[j] > 1.0f) color[j] = 1.0f;
+            if(color[j] < 0.0f) color[j] = 0.0f;
+        }
+
+        tracedTexels++;
+    }
+
+    return color;
+}
+
+//
 // kexLightmapBuilder::BuildSurfaceParams
 //
 
@@ -203,12 +294,14 @@ void kexLightmapBuilder::BuildSurfaceParams(surface_t *surface) {
             tCoords[0].y = 1.0f / samples;
             tCoords[1].z = 1.0f / samples;
             break;
+
         case AXIS_XZ:
             width = (int)roundedSize.x;
             height = (int)roundedSize.z;
             tCoords[0].x = 1.0f / samples;
             tCoords[1].z = 1.0f / samples;
             break;
+
         case AXIS_XY:
             width = (int)roundedSize.x;
             height = (int)roundedSize.y;
@@ -244,9 +337,9 @@ void kexLightmapBuilder::BuildSurfaceParams(surface_t *surface) {
     // calculate texture coordinates
     for(i = 0; i < surface->numVerts; i++) {
         tDelta = surface->verts[i] - bounds.min;
-        surface->lightmapCoords[i + 0 * 2] =
+        surface->lightmapCoords[i * 2 + 0] =
             (tDelta.Dot(tCoords[0]) + x + 0.5f) / (float)textureWidth;
-        surface->lightmapCoords[i + 1 * 2] =
+        surface->lightmapCoords[i * 2 + 1] =
             (tDelta.Dot(tCoords[1]) + y + 0.5f) / (float)textureHeight;
     }
 
@@ -277,7 +370,7 @@ void kexLightmapBuilder::BuildSurfaceParams(surface_t *surface) {
 //
 
 void kexLightmapBuilder::TraceSurface(surface_t *surface) {
-    kexVec3 **colorSamples;
+    static kexVec3 colorSamples[LIGHTMAP_MAX_SIZE][LIGHTMAP_MAX_SIZE];
     int sampleWidth;
     int sampleHeight;
     kexVec3 normal;
@@ -285,14 +378,7 @@ void kexLightmapBuilder::TraceSurface(surface_t *surface) {
     int i;
     int j;
 
-    sampleWidth = textureWidth * extraSamples;
-    sampleHeight = textureHeight * extraSamples;
-
-    colorSamples = (kexVec3**)Mem_Alloca(sizeof(kexVec3*) * sampleWidth);
-
-    for(i = 0; i < textureWidth * extraSamples; i++) {
-        colorSamples[i] = (kexVec3*)Mem_Alloca(sizeof(kexVec3) * sampleHeight);
-    }
+    memset(colorSamples, 0, sizeof(colorSamples));
 
     sampleWidth = surface->lightmapDims[0];
     sampleHeight = surface->lightmapDims[1];
@@ -300,7 +386,8 @@ void kexLightmapBuilder::TraceSurface(surface_t *surface) {
     normal = surface->plane.Normal();
 
 #ifdef EXPORT_TEXELS_OBJ
-    FILE *f = fopen("texels.obj", "w");
+    static int cnt = 0;
+    FILE *f = fopen(Va("texels_%02d.obj", cnt++), "w");
     int indices = 0;
 #endif
 
@@ -321,17 +408,135 @@ void kexLightmapBuilder::TraceSurface(surface_t *surface) {
             indices += 8;
 #endif
 
-            // TODO
+            colorSamples[i][j] += LightTexelSample(pos, surface->plane);
         }
+        printf(".");
     }
 
 #ifdef EXPORT_TEXELS_OBJ
     fclose(f);
 #endif
 
-    // TODO
+    for(i = 0; i < sampleHeight; i++) {
+        for(j = 0; j < sampleWidth; j++) {
+            int offs = (((textureWidth * (i + surface->lightmapOffs[1])) +
+                surface->lightmapOffs[0]) * 3);
+
+            currentTexture[offs + j * 3 + 0] = (byte)(colorSamples[i][j][2] * 255);
+            currentTexture[offs + j * 3 + 1] = (byte)(colorSamples[i][j][1] * 255);
+            currentTexture[offs + j * 3 + 2] = (byte)(colorSamples[i][j][0] * 255);
+        }
+        printf(".");
+    }
 
     Mem_GC();
+}
+
+//
+// kexLightmapBuilder::CreateLightmaps
+//
+
+void kexLightmapBuilder::CreateLightmaps(kexDoomMap &doomMap) {
+    trace.Init(doomMap);
+    AddThingLights(doomMap);
+
+    printf("------------- Building lightmap -------------\n");
+
+    for(unsigned int i = 0; i < surfaces.Length(); i++) {
+        printf("Lighting surface %03d: ", i);
+        BuildSurfaceParams(surfaces[i]);
+        TraceSurface(surfaces[i]);
+        printf("\n");
+    }
+
+    printf("\nTexels traced: %i\n\n", tracedTexels);
+}
+
+//
+// kexLightmapBuilder::CreateLightmapLump
+//
+
+byte *kexLightmapBuilder::CreateLightmapLump(int *size) {
+    int lumpSize = 0;
+    unsigned int i;
+    int j;
+    int numTexCoords;
+    int coordOffsets;
+    byte *data;
+    kexBinFile lumpFile;
+
+    lumpSize += ((textureWidth * textureHeight) * 3) * textures.Length();
+    lumpSize += (5 * surfaces.Length());
+    lumpSize += 256;
+
+    for(i = 0; i < surfaces.Length(); i++) {
+        lumpSize += (surfaces[i]->numVerts * 2) * sizeof(float);
+    }
+
+    data = (byte*)Mem_Calloc(lumpSize, hb_static);
+    lumpFile.SetBuffer(data);
+
+    lumpFile.Write32(surfaces.Length());
+    coordOffsets = 0;
+    numTexCoords = 0;
+
+    for(i = 0; i < surfaces.Length(); i++) {
+        lumpFile.Write16(surfaces[i]->type);
+        lumpFile.Write16(surfaces[i]->typeIndex);
+        lumpFile.Write16(surfaces[i]->lightmapNum);
+        lumpFile.Write16(surfaces[i]->numVerts * 2);
+        lumpFile.Write32(coordOffsets);
+
+        coordOffsets += (surfaces[i]->numVerts * 2) * sizeof(float);
+        numTexCoords += surfaces[i]->numVerts * 2;
+    }
+
+    lumpFile.Write32(numTexCoords);
+
+    for(i = 0; i < surfaces.Length(); i++) {
+        for(j = 0; j < surfaces[i]->numVerts * 2; j++) {
+            lumpFile.WriteFloat(surfaces[i]->lightmapCoords[j]);
+        }
+    }
+
+    lumpFile.Write32(textures.Length());
+    lumpFile.Write32(textureWidth);
+    lumpFile.Write32(textureHeight);
+
+    for(i = 0; i < textures.Length(); i++) {
+        for(j = 0; j < (textureWidth * textureHeight) * 3; j++) {
+            lumpFile.Write8(textures[i][j]);
+        }
+    }
+
+    *size = lumpFile.BufferAt() - lumpFile.Buffer();
+    return data;
+}
+
+//
+// kexLightmapBuilder::WriteTexturesToTGA
+//
+
+void kexLightmapBuilder::WriteTexturesToTGA(void) {
+    kexBinFile file;
+
+    for(unsigned int i = 0; i < textures.Length(); i++) {
+        file.Create(Va("lightmap_%02d.tga", i));
+        file.Write16(0);
+        file.Write16(2);
+        file.Write16(0);
+        file.Write16(0);
+        file.Write16(0);
+        file.Write16(0);
+        file.Write16(textureWidth);
+        file.Write16(textureHeight);
+        file.Write16(24);
+
+        for(int j = 0; j < (textureWidth * textureHeight) * 3; j++) {
+            file.Write8(textures[i][j]);
+        }
+        file.Close();
+    }
 }
 
 //

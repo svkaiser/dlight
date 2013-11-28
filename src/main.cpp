@@ -71,6 +71,21 @@ void Error(char *error, ...) {
 }
 
 //
+// Va
+//
+
+char *Va(char *str, ...) {
+    va_list v;
+    static char vastr[1024];
+	
+    va_start(v, str);
+    vsprintf(vastr, str,v);
+    va_end(v);
+    
+    return vastr;	
+}
+
+//
 // Main
 //
 
@@ -78,6 +93,7 @@ int main(int argc, char **argv) {
     kexWadFile wadFile;
     kexDoomMap doomMap;
     kexLightmapBuilder builder;
+    int size;
 
     if(!argv[1]) {
         return 0;
@@ -87,13 +103,24 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    Surface_AllocateFromMap(wadFile, doomMap);
-    builder.trace.Init(doomMap);
+    printf("------------- Building level structures -------------\n\n");
+    doomMap.BuildMapFromWad(wadFile);
 
-    // TEMP/TESTING
-    //builder.BuildSurfaceParams(surfaces[18]);
-    //builder.TraceSurface(surfaces[18]);
+    printf("------------- Allocating surfaces from level -------------\n\n");
+    Surface_AllocateFromMap(doomMap);
 
+    printf("------------- Creating lightmaps -------------\n\n");
+    builder.CreateLightmaps(doomMap);
+    builder.WriteTexturesToTGA();
+    byte *lm = builder.CreateLightmapLump(&size);
+
+    FILE *f = fopen("LIGHTMAP.lmp", "wb");
+    fwrite(lm, 1, size, f);
+    fclose(f);
+
+    printf("Done\n\n");
+
+    wadFile.Close();
     Mem_Purge(hb_static);
 
     return 0;

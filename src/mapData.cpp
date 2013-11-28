@@ -67,13 +67,6 @@ kexDoomMap::kexDoomMap(void) {
 //
 
 kexDoomMap::~kexDoomMap(void) {
-    Mem_Free(this->leafs);
-    Mem_Free(this->ssLeafLookup);
-    Mem_Free(this->ssLeafCount);
-
-    this->leafs         = NULL;
-    this->ssLeafLookup  = NULL;
-    this->ssLeafCount   = NULL;
 }
 
 //
@@ -89,6 +82,13 @@ void kexDoomMap::BuildMapFromWad(kexWadFile &wadFile) {
     wadFile.GetMapLump<mapSeg_t>("SEGS", &mapSegs, &numSegs);
     wadFile.GetMapLump<mapSubSector_t>("SSECTORS", &mapSSects, &numSSects);
     wadFile.GetMapLump<mapNode_t>("NODES", &nodes, &numNodes);
+    wadFile.GetMapLump<mapLightInfo_t>("LIGHTS", &lightInfos, &numLightInfos);
+
+    printf("------------- Level Info -------------\n");
+    printf("Vertices: %i\n", numVerts);
+    printf("Segments: %i\n", numSegs);
+    printf("Subsectors: %i\n", numSSects);
+    printf("Light infos: %i\n\n", numLightInfos);
 
     BuildLeafs(wadFile);
 }
@@ -112,6 +112,8 @@ void kexDoomMap::BuildLeafs(kexWadFile &wadFile) {
         return;
     }
 
+    printf("------------- Building leaves from subsectors -------------\n");
+
     length = lump->size;
     mlf = (short*)wadFile.GetLumpData(lump);
 
@@ -127,6 +129,8 @@ void kexDoomMap::BuildLeafs(kexWadFile &wadFile) {
             size += (word)*src;
             next = (*src << 2) + 2;
             src += (next >> 1);
+
+            printf(".");
         }
     }
 
@@ -179,8 +183,12 @@ void kexDoomMap::BuildLeafs(kexWadFile &wadFile) {
                     leafs[lfNum].seg = &mapSegs[(word)seg];
                 }
             }
+
+            printf(".");
         }
     }
+
+    printf("\n\n");
 }
 
 //

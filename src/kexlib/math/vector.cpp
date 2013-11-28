@@ -316,6 +316,14 @@ kexVec3 kexVec3::operator+(kexVec3 &vec) {
 }
 
 //
+// kexVec3::operator+
+//
+
+kexVec3 kexVec3::operator+(const float val) {
+    return kexVec3(x + val, y + val, z + val);
+}
+
+//
 // kexVec3::operator+=
 //
 
@@ -323,6 +331,17 @@ kexVec3 &kexVec3::operator+=(const kexVec3 &vec) {
     x += vec.x;
     y += vec.y;
     z += vec.z;
+    return *this;
+}
+
+//
+// kexVec3::operator+=
+//
+
+kexVec3 &kexVec3::operator+=(const float val) {
+    x += val;
+    y += val;
+    z += val;
     return *this;
 }
 

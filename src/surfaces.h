@@ -56,6 +56,6 @@ extern kexArray<surface_t*> surfaces;
 class kexDoomMap;
 class kexWadFile;
 
-void Surface_AllocateFromMap(kexWadFile &wadFile, kexDoomMap &doomMap);
+void Surface_AllocateFromMap(kexDoomMap &doomMap);
 
 #endif

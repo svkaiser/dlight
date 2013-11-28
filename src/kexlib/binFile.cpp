@@ -38,6 +38,7 @@ kexBinFile::kexBinFile(void) {
     this->handle = NULL;
     this->buffer = NULL;
     this->bufferOffset = 0;
+    this->bOpened = false;
 }
 
 //
@@ -244,7 +245,12 @@ kexStr kexBinFile::ReadString(void) {
 //
 
 void kexBinFile::Write8(const byte val) {
-    fwrite(&val, 1, 1, handle);
+    if(bOpened) {
+        fwrite(&val, 1, 1, handle);
+    }
+    else {
+        buffer[bufferOffset] = val;
+    }
     bufferOffset++;
 }
 

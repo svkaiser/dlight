@@ -31,7 +31,7 @@
 #include "surfaces.h"
 #include "mapData.h"
 
-#define EXPORT_OBJ
+//#define EXPORT_OBJ
 
 kexArray<surface_t*> surfaces;
 
@@ -155,6 +155,8 @@ static void Surface_AllocateFromLeaf(kexDoomMap &doomMap) {
     int i;
     int j;
 
+    printf("------------- Building leaf surfaces -------------\n");
+
     doomMap.leafSurfaces[0] = (surface_t**)Mem_Calloc(sizeof(surface_t*) *
         doomMap.numSSects, hb_static);
     doomMap.leafSurfaces[1] = (surface_t**)Mem_Calloc(sizeof(surface_t*) *
@@ -224,16 +226,18 @@ static void Surface_AllocateFromLeaf(kexDoomMap &doomMap) {
         doomMap.leafSurfaces[1][i] = surf;
 
         surfaces.Push(surf);
+
+        printf(".");
     }
+
+    printf("\nLeaf surfaces: %i\n", surfaces.Length() - doomMap.numSSects);
 }
 
 //
 // Surface_AllocateFromMap
 //
 
-void Surface_AllocateFromMap(kexWadFile &wadFile, kexDoomMap &doomMap) {
-    doomMap.BuildMapFromWad(wadFile);
-
+void Surface_AllocateFromMap(kexDoomMap &doomMap) {
     doomMap.segSurfaces[0] = (surface_t**)Mem_Calloc(sizeof(surface_t*) *
         doomMap.numSegs, hb_static);
     doomMap.segSurfaces[1] = (surface_t**)Mem_Calloc(sizeof(surface_t*) *
@@ -241,9 +245,14 @@ void Surface_AllocateFromMap(kexWadFile &wadFile, kexDoomMap &doomMap) {
     doomMap.segSurfaces[2] = (surface_t**)Mem_Calloc(sizeof(surface_t*) *
         doomMap.numSegs, hb_static);
 
+    printf("------------- Building seg surfaces -------------\n");
+
     for(int i = 0; i < doomMap.numSegs; i++) {
         Surface_AllocateFromSeg(doomMap, &doomMap.mapSegs[i]);
+        printf(".");
     }
+
+    printf("\nSeg surfaces: %i\n", surfaces.Length());
 
 #ifdef EXPORT_OBJ
     FILE *f = fopen("temp.obj", "w");
@@ -271,6 +280,8 @@ void Surface_AllocateFromMap(kexWadFile &wadFile, kexDoomMap &doomMap) {
 #endif
 
     Surface_AllocateFromLeaf(doomMap);
+
+    printf("Surfaces total: %i\n\n", surfaces.Length());
 
 #ifdef EXPORT_OBJ
     for(unsigned int i = curLen; i < surfaces.Length(); i++) {
