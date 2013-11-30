@@ -118,7 +118,7 @@ static void Surface_AllocateFromSeg(kexDoomMap &doomMap, mapSeg_t *seg) {
     }
 
     // middle seg
-    if(side->midtexture != -1) {
+    if(back == NULL) {
         surf = (surface_t*)Mem_Calloc(sizeof(surface_t), hb_static);
         surf->numVerts = 4;
         surf->verts = (kexVec3*)Mem_Calloc(sizeof(kexVec3) * 4, hb_static);

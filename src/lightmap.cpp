@@ -47,6 +47,7 @@ kexLightmapBuilder::kexLightmapBuilder(void) {
     this->numTextures   = 0;
     this->samples       = 16;
     this->extraSamples  = 2;
+    this->ambience      = 0.0f;
     this->tracedTexels  = 0;
 }
 
@@ -70,6 +71,10 @@ void kexLightmapBuilder::AddThingLights(kexDoomMap &doomMap) {
         thing = &doomMap.mapThings[i];
 
         if(thing->type != TYPE_LIGHTPOINT) {
+            continue;
+        }
+
+        if(thing->angle == 0) {
             continue;
         }
 
@@ -199,6 +204,12 @@ kexVec3 kexLightmapBuilder::LightTexelSample(const kexVec3 &origin, kexPlane &pl
         light = thingLights[i];
         lightOrigin.Set(F(light->x << 16), F(light->y << 16), F(light->z << 16));
 
+        if(ambience > 0.0f) {
+            for(j = 0; j < 3; j++) {
+                color[j] += ambience;
+            }
+        }
+
         if(plane.Distance(lightOrigin) - plane.d < 0) {
             continue;
         }
@@ -208,7 +219,7 @@ kexVec3 kexLightmapBuilder::LightTexelSample(const kexVec3 &origin, kexPlane &pl
 
         dir.Normalize();
 
-        radius = light->angle;
+        radius = 50.0f * light->angle;
         lInfo = &lightInfos[light->options];
         //intensity = lInfo->rgba[3];
         intensity = 8;
@@ -217,13 +228,13 @@ kexVec3 kexLightmapBuilder::LightTexelSample(const kexVec3 &origin, kexPlane &pl
             intensity = 1.0f;
         }
 
-        colorAdd = radius / (dist * dist) * plane.Normal().Dot(dir);
-
         trace.Trace(lightOrigin, origin);
 
         if(trace.fraction != 1) {
             continue;
         }
+
+        colorAdd = radius / (dist * dist) * plane.Normal().Dot(dir);
 
         for(j = 0; j < 3; j++) {
             color[j] += (colorAdd * ((float)lInfo->rgba[j] / 255.0f)) * intensity;
@@ -465,9 +476,10 @@ byte *kexLightmapBuilder::CreateLightmapLump(int *size) {
     byte *data;
     kexBinFile lumpFile;
 
+    // try to guess the actual lump size
     lumpSize += ((textureWidth * textureHeight) * 3) * textures.Length();
     lumpSize += (5 * surfaces.Length());
-    lumpSize += 256;
+    lumpSize += 1024; // add some extra slop
 
     for(i = 0; i < surfaces.Length(); i++) {
         lumpSize += (surfaces[i]->numVerts * 2) * sizeof(float);

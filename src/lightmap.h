@@ -68,6 +68,7 @@ private:
     int                     numTextures;
     int                     samples;
     int                     extraSamples;
+    float                   ambience;
     int                     tracedTexels;
 };
 
