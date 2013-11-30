@@ -64,18 +64,30 @@ kexLightmapBuilder::~kexLightmapBuilder(void) {
 
 void kexLightmapBuilder::AddThingLights(kexDoomMap &doomMap) {
     mapThing_t *thing;
+    int j;
 
     printf("------------- Adding thing lights -------------\n");
 
     for(int i = 0; i < doomMap.numThings; i++) {
         thing = &doomMap.mapThings[i];
 
-        if(thing->type != TYPE_LIGHTPOINT) {
+        if(!(thing->type >= TYPE_LIGHTPOINT && thing->type <= TYPE_LIGHTPOINT_WEAK)) {
             continue;
         }
 
         if(thing->angle == 0) {
             continue;
+        }
+
+        thing->options = 255;
+
+        if(thing->tid != 0) {
+            for(j = 0; j < doomMap.numSectors; j++) {
+                if(doomMap.mapSectors[j].tag == thing->tid) {
+                    thing->options = doomMap.mapSectors[j].colors[2];
+                    break;
+                }
+            }
         }
 
         thingLights.Push(thing);
@@ -197,6 +209,7 @@ kexVec3 kexLightmapBuilder::LightTexelSample(const kexVec3 &origin, kexPlane &pl
     float intensity;
     float colorAdd;
     mapLightInfo_t *lInfo;
+    mapLightInfo_t lInfo2;
 
     color.Clear();
 
@@ -217,10 +230,29 @@ kexVec3 kexLightmapBuilder::LightTexelSample(const kexVec3 &origin, kexPlane &pl
         dir = (lightOrigin - origin);
         dist = dir.Unit();
 
+        if(light->type == TYPE_LIGHTPOINT_WEAK) {
+            if(dist < 128) {
+                dist = 128;
+            }
+        }
+
         dir.Normalize();
 
         radius = 50.0f * light->angle;
-        lInfo = &lightInfos[light->options];
+
+        if(light->options <= 255) {
+            lInfo2.rgba[0] = (byte)light->options;
+            lInfo2.rgba[1] = (byte)light->options;
+            lInfo2.rgba[2] = (byte)light->options;
+            lInfo2.rgba[3] = 0;
+            lInfo2.tag = 0;
+        }
+        else {
+            lInfo2 = lightInfos[light->options - 256];
+        }
+
+        lInfo = &lInfo2;
+
         //intensity = lInfo->rgba[3];
         intensity = 8;
 

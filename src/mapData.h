@@ -28,9 +28,10 @@
 #include "wad.h"
 #include "surfaces.h"
 
-#define NO_SIDE_INDEX       ((word)-1)
-#define NF_SUBSECTOR        0x8000
-#define TYPE_LIGHTPOINT     16384
+#define NO_SIDE_INDEX           ((word)-1)
+#define NF_SUBSECTOR            0x8000
+#define TYPE_LIGHTPOINT         16384
+#define TYPE_LIGHTPOINT_WEAK    16385
 
 typedef enum {
     ML_BLOCKING             = 1,    // Solid, is an obstacle.
