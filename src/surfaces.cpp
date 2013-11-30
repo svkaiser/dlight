@@ -62,6 +62,10 @@ static void Surface_AllocateFromSeg(kexDoomMap &doomMap, mapSeg_t *seg) {
         bTop = back->ceilingheight;
         bBottom = back->floorheight;
 
+        if(bTop == top && bBottom == bottom) {
+            return;
+        }
+
         // bottom seg
         if(bottom < bBottom) {
             if(side->bottomtexture != -1) {

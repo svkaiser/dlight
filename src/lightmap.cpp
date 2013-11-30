@@ -475,6 +475,7 @@ byte *kexLightmapBuilder::CreateLightmapLump(int *size) {
     int coordOffsets;
     byte *data;
     kexBinFile lumpFile;
+    fint_t fuv;
 
     // try to guess the actual lump size
     lumpSize += ((textureWidth * textureHeight) * 3) * textures.Length();
@@ -482,7 +483,7 @@ byte *kexLightmapBuilder::CreateLightmapLump(int *size) {
     lumpSize += 1024; // add some extra slop
 
     for(i = 0; i < surfaces.Length(); i++) {
-        lumpSize += (surfaces[i]->numVerts * 2) * sizeof(float);
+        lumpSize += (surfaces[i]->numVerts * 2) * sizeof(short);
     }
 
     data = (byte*)Mem_Calloc(lumpSize, hb_static);
@@ -499,7 +500,7 @@ byte *kexLightmapBuilder::CreateLightmapLump(int *size) {
         lumpFile.Write16(surfaces[i]->numVerts * 2);
         lumpFile.Write32(coordOffsets);
 
-        coordOffsets += (surfaces[i]->numVerts * 2) * sizeof(float);
+        coordOffsets += (surfaces[i]->numVerts * 2);
         numTexCoords += surfaces[i]->numVerts * 2;
     }
 
@@ -507,7 +508,8 @@ byte *kexLightmapBuilder::CreateLightmapLump(int *size) {
 
     for(i = 0; i < surfaces.Length(); i++) {
         for(j = 0; j < surfaces[i]->numVerts * 2; j++) {
-            lumpFile.WriteFloat(surfaces[i]->lightmapCoords[j]);
+            fuv.f = surfaces[i]->lightmapCoords[j];
+            lumpFile.Write16(fuv.i >> 16);
         }
     }
 
