@@ -30,8 +30,14 @@
 
 #define NO_SIDE_INDEX           ((word)-1)
 #define NF_SUBSECTOR            0x8000
-#define TYPE_LIGHTPOINT         16384
-#define TYPE_LIGHTPOINT_WEAK    16385
+
+typedef enum {
+    TYPE_LIGHTPOINT             = 16384,
+    TYPE_LIGHTPOINT_WEAK,
+    TYPE_DIRECTIONAL_CEILING,
+    TYPE_DIRECTIONAL_TARGET,
+    NUMLIGHTTYPES
+} lightTypes_t;
 
 typedef enum {
     ML_BLOCKING             = 1,    // Solid, is an obstacle.
@@ -137,6 +143,8 @@ public:
     mapSideDef_t    *GetSideDef(const mapSeg_t *seg);
     mapSector_t     *GetFrontSector(const mapSeg_t *seg);
     mapSector_t     *GetBackSector(const mapSeg_t *seg);
+    mapSector_t     *GetSectorFromSubSector(const mapSubSector_t *sub);
+    mapSubSector_t  *PointInSubSector(const int x, const int y);
 
     mapThing_t      *mapThings;
     mapLineDef_t    *mapLines;

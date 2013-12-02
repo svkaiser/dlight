@@ -171,14 +171,7 @@ static void Surface_AllocateFromLeaf(kexDoomMap &doomMap) {
             continue;
         }
 
-        // try to find a sector that the subsector belongs to
-        for(j = 0; j < doomMap.mapSSects[i].numsegs; j++) {
-            mapSeg_t *seg = &doomMap.mapSegs[doomMap.mapSSects[i].firstseg + j];
-            if(seg->side != -1) {
-                sector = doomMap.GetFrontSector(seg);
-                break;
-            }
-        }
+        sector = doomMap.GetSectorFromSubSector(&doomMap.mapSSects[i]);
 
         // I will be NOT surprised if some users tries to do something stupid with
         // sector hacks

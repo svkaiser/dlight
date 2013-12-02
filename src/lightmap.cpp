@@ -71,7 +71,11 @@ void kexLightmapBuilder::AddThingLights(kexDoomMap &doomMap) {
     for(int i = 0; i < doomMap.numThings; i++) {
         thing = &doomMap.mapThings[i];
 
-        if(!(thing->type >= TYPE_LIGHTPOINT && thing->type <= TYPE_LIGHTPOINT_WEAK)) {
+        if(!(thing->type >= TYPE_LIGHTPOINT && thing->type <= NUMLIGHTTYPES)) {
+            continue;
+        }
+
+        if(thing->type == TYPE_DIRECTIONAL_TARGET) {
             continue;
         }
 
@@ -195,6 +199,92 @@ kexBBox kexLightmapBuilder::GetBoundsFromSurface(const surface_t *surface) {
 }
 
 //
+// kexLightmapBuilder::EmitFromCeiling
+//
+
+bool kexLightmapBuilder::EmitFromCeiling(const kexVec3 &origin, const kexVec3 &normal,
+                                         const mapThing_t *light, float *dist) {
+    mapSubSector_t *sub;
+    mapSubSector_t *tSub;
+    mapSector_t *sector;
+    surface_t *surf;
+    kexVec3 dir;
+    int num;
+    int i;
+    unsigned int k;
+
+    if(!(sub = map->PointInSubSector(light->x, light->y))) {
+        return false;
+    }
+    if(!(sector = map->GetSectorFromSubSector(sub))) {
+        return false;
+    }
+
+    num = sub - map->mapSSects;
+    surf = NULL;
+
+    for(k = 0; k < surfaces.Length(); k++) {
+        if(surfaces[k]->type != ST_CEILING) {
+            continue;
+        }
+
+        if(surfaces[k]->typeIndex == num) {
+            surf = surfaces[k];
+            break;
+        }
+    }
+
+    if(surf == NULL) {
+        return false;
+    }
+
+    dir = kexVec3(0, 0, 1);
+
+    for(i = 0; i < map->numThings; i++) {
+        mapThing_t *thing = &map->mapThings[i];
+
+        if(thing->type != TYPE_DIRECTIONAL_TARGET) {
+            continue;
+        }
+
+        if(thing->tid != light->tid) {
+            continue;
+        }
+
+        dir = kexVec3(F(light->x << 16), F(light->y << 16), F(light->z << 16)) -
+            kexVec3(F(thing->x << 16), F(thing->y << 16), F(thing->z << 16));
+
+        dir.Normalize();
+        break;
+    }
+
+    *dist = normal.Dot(dir);
+
+    if(*dist <= 0) {
+        return false;
+    }
+
+    trace.Trace(origin, origin + (dir * 32768));
+
+    if(trace.fraction == 1 || trace.hitSurface == NULL) {
+        return false;
+    }
+
+    if(trace.hitSurface->type != ST_CEILING) {
+        return false;
+    }
+
+    tSub = &map->mapSSects[trace.hitSurface->typeIndex];
+
+    if(map->GetSectorFromSubSector(tSub) != sector ||
+        trace.hitSurface->type != ST_CEILING) {
+            return false;
+    }
+
+    return true;
+}
+
+//
 // kexLightmapBuilder::LightTexelSample
 //
 
@@ -220,23 +310,14 @@ kexVec3 kexLightmapBuilder::LightTexelSample(const kexVec3 &origin, kexPlane &pl
         if(ambience > 0.0f) {
             for(j = 0; j < 3; j++) {
                 color[j] += ambience;
+                if(color[j] > 1.0f) color[j] = 1.0f;
+                if(color[j] < 0.0f) color[j] = 0.0f;
             }
         }
 
         if(plane.Distance(lightOrigin) - plane.d < 0) {
             continue;
         }
-
-        dir = (lightOrigin - origin);
-        dist = dir.Unit();
-
-        if(light->type == TYPE_LIGHTPOINT_WEAK) {
-            if(dist < 128) {
-                dist = 128;
-            }
-        }
-
-        dir.Normalize();
 
         radius = 50.0f * light->angle;
 
@@ -260,11 +341,37 @@ kexVec3 kexLightmapBuilder::LightTexelSample(const kexVec3 &origin, kexPlane &pl
             intensity = 1.0f;
         }
 
+        if(light->type == TYPE_DIRECTIONAL_CEILING) {
+            if(!EmitFromCeiling(origin, plane.Normal(), light, &dist)) {
+                continue;
+            }
+
+            for(j = 0; j < 3; j++) {
+                color[j] += (/*dist **/ ((float)lInfo->rgba[j] / 255.0f));
+                if(color[j] > 1.0f) color[j] = 1.0f;
+                if(color[j] < 0.0f) color[j] = 0.0f;
+            }
+
+            tracedTexels++;
+            continue;
+        }
+
         trace.Trace(lightOrigin, origin);
 
         if(trace.fraction != 1) {
             continue;
         }
+
+        dir = (lightOrigin - origin);
+        dist = dir.Unit();
+
+        if(light->type == TYPE_LIGHTPOINT_WEAK) {
+            if(dist < 128) {
+                dist = 128;
+            }
+        }
+
+        dir.Normalize();
 
         colorAdd = radius / (dist * dist) * plane.Normal().Dot(dir);
 
@@ -436,15 +543,9 @@ void kexLightmapBuilder::TraceSurface(surface_t *surface) {
 
     for(i = 0; i < sampleHeight; i++) {
         for(j = 0; j < sampleWidth; j++) {
-            pos.x = surface->lightmapOrigin.x + normal.x +
-                j * surface->lightmapSteps[0].x +
-                i * surface->lightmapSteps[1].x;
-            pos.y = surface->lightmapOrigin.y + normal.y +
-                j * surface->lightmapSteps[0].y +
-                i * surface->lightmapSteps[1].y;
-            pos.z = surface->lightmapOrigin.z + normal.z +
-                j * surface->lightmapSteps[0].z +
-                i * surface->lightmapSteps[1].z;
+            pos = surface->lightmapOrigin + normal +
+                (surface->lightmapSteps[0] * (float)j) +
+                (surface->lightmapSteps[1] * (float)i);
 
 #ifdef EXPORT_TEXELS_OBJ
             ExportTexelsToObjFile(f, pos, indices);
@@ -471,8 +572,6 @@ void kexLightmapBuilder::TraceSurface(surface_t *surface) {
         }
         printf(".");
     }
-
-    Mem_GC();
 }
 
 //
@@ -482,6 +581,8 @@ void kexLightmapBuilder::TraceSurface(surface_t *surface) {
 void kexLightmapBuilder::CreateLightmaps(kexDoomMap &doomMap) {
     trace.Init(doomMap);
     AddThingLights(doomMap);
+
+    map = &doomMap;
 
     printf("------------- Building lightmap -------------\n");
 
@@ -511,7 +612,7 @@ byte *kexLightmapBuilder::CreateLightmapLump(int *size) {
 
     // try to guess the actual lump size
     lumpSize += ((textureWidth * textureHeight) * 3) * textures.Length();
-    lumpSize += (5 * surfaces.Length());
+    lumpSize += (12 * surfaces.Length());
     lumpSize += 1024; // add some extra slop
 
     for(i = 0; i < surfaces.Length(); i++) {
