@@ -108,9 +108,9 @@ void kexBinFile::Close(void) {
     }
     if(handle) {
         fclose(handle);
-    }
-    if(buffer) {
-        Mem_Free(buffer);
+        if(buffer) {
+            Mem_Free(buffer);
+        }
     }
 
     bOpened = false;

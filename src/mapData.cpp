@@ -84,6 +84,19 @@ void kexDoomMap::BuildMapFromWad(kexWadFile &wadFile) {
     wadFile.GetMapLump<mapNode_t>("NODES", &nodes, &numNodes);
     wadFile.GetMapLump<mapLightInfo_t>("LIGHTS", &lightInfos, &numLightInfos);
 
+    if(mapSegs == NULL) {
+        Error("kexDoomMap::BuildMapFromWad: SEGS lump not found\n");
+        return;
+    }
+    if(mapSSects == NULL) {
+        Error("kexDoomMap::BuildMapFromWad: SSECTORS lump not found\n");
+        return;
+    }
+    if(nodes == NULL) {
+        Error("kexDoomMap::BuildMapFromWad: NODES lump not found\n");
+        return;
+    }
+
     printf("------------- Level Info -------------\n");
     printf("Vertices: %i\n", numVerts);
     printf("Segments: %i\n", numSegs);
@@ -109,6 +122,7 @@ void kexDoomMap::BuildLeafs(kexWadFile &wadFile) {
     lump = wadFile.GetLumpFromName("LEAFS");
 
     if(lump == NULL) {
+        Error("kexDoomMap::BuildLeafs: LEAFS lump not found\n");
         return;
     }
 
@@ -239,4 +253,61 @@ mapSector_t *kexDoomMap::GetBackSector(const mapSeg_t *seg) {
     }
 
     return NULL;
+}
+
+//
+// kexDoomMap::GetSectorFromSubSector
+//
+
+mapSector_t *kexDoomMap::GetSectorFromSubSector(const mapSubSector_t *sub) {
+    mapSector_t *sector = NULL;
+
+    // try to find a sector that the subsector belongs to
+    for(int i = 0; i < sub->numsegs; i++) {
+        mapSeg_t *seg = &mapSegs[sub->firstseg + i];
+        if(seg->side != -1) {
+            sector = GetFrontSector(seg);
+            break;
+        }
+    }
+
+    return sector;
+}
+
+//
+// kexDoomMap::PointInSubSector
+//
+
+mapSubSector_t *kexDoomMap::PointInSubSector(const int x, const int y) {
+    mapNode_t   *node;
+    int         side;
+    int         nodenum;
+    kexVec3     dp1;
+    kexVec3     dp2;
+    float       d;
+    
+    // single subsector is a special case
+    if(!numNodes) {
+        return &mapSSects[0];
+    }
+    
+    nodenum = numNodes - 1;
+    
+    while(!(nodenum & NF_SUBSECTOR) ) {
+        node = &nodes[nodenum];
+        
+        kexVec3 pt1(F(node->x << 16), F(node->y << 16), 0);
+        kexVec3 pt2(F(node->dx << 16), F(node->dy << 16), 0);
+        kexVec3 pos(F(x << 16), F(y << 16), 0);
+
+        dp1 = pt1 - pos;
+        dp2 = (pt2 + pt1) - pos;
+        d = dp1.Cross(dp2).z;
+
+        side = FLOATSIGNBIT(d);
+
+        nodenum = node->children[side ^ 1];
+    }
+    
+    return &mapSSects[nodenum & ~NF_SUBSECTOR];
 }

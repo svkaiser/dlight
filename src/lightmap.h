@@ -56,8 +56,11 @@ private:
     bool                    MakeRoomForBlock(const int width, const int height, int *x, int *y);
     kexBBox                 GetBoundsFromSurface(const surface_t *surface);
     kexVec3                 LightTexelSample(const kexVec3 &origin, kexPlane &plane);
+    bool                    EmitFromCeiling(const kexVec3 &origin, const kexVec3 &normal,
+                                            const mapThing_t *light, float *dist);
     void                    ExportTexelsToObjFile(FILE *f, const kexVec3 &org, int indices);
 
+    kexDoomMap              *map;
     mapLightInfo_t          *lightInfos;
     kexArray<mapThing_t*>   thingLights;
     kexArray<byte*>         textures;
@@ -68,6 +71,7 @@ private:
     int                     numTextures;
     int                     samples;
     int                     extraSamples;
+    float                   ambience;
     int                     tracedTexels;
 };
 

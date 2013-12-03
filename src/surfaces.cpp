@@ -62,6 +62,10 @@ static void Surface_AllocateFromSeg(kexDoomMap &doomMap, mapSeg_t *seg) {
         bTop = back->ceilingheight;
         bBottom = back->floorheight;
 
+        if(bTop == top && bBottom == bottom) {
+            return;
+        }
+
         // bottom seg
         if(bottom < bBottom) {
             if(side->bottomtexture != -1) {
@@ -118,7 +122,7 @@ static void Surface_AllocateFromSeg(kexDoomMap &doomMap, mapSeg_t *seg) {
     }
 
     // middle seg
-    if(side->midtexture != -1) {
+    if(back == NULL) {
         surf = (surface_t*)Mem_Calloc(sizeof(surface_t), hb_static);
         surf->numVerts = 4;
         surf->verts = (kexVec3*)Mem_Calloc(sizeof(kexVec3) * 4, hb_static);
@@ -167,14 +171,7 @@ static void Surface_AllocateFromLeaf(kexDoomMap &doomMap) {
             continue;
         }
 
-        // try to find a sector that the subsector belongs to
-        for(j = 0; j < doomMap.mapSSects[i].numsegs; j++) {
-            mapSeg_t *seg = &doomMap.mapSegs[doomMap.mapSSects[i].firstseg + j];
-            if(seg->side != -1) {
-                sector = doomMap.GetFrontSector(seg);
-                break;
-            }
-        }
+        sector = doomMap.GetSectorFromSubSector(&doomMap.mapSSects[i]);
 
         // I will be NOT surprised if some users tries to do something stupid with
         // sector hacks
