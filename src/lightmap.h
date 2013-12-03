@@ -50,6 +50,10 @@ public:
     byte                    *CreateLightmapLump(int *size);
 
     kexTrace                trace;
+    int                     samples;
+    float                   ambience;
+    int                     textureWidth;
+    int                     textureHeight;
 
 private:
     void                    NewTexture(void);
@@ -65,13 +69,9 @@ private:
     kexArray<mapThing_t*>   thingLights;
     kexArray<byte*>         textures;
     byte                    *currentTexture;
-    int                     textureWidth;
-    int                     textureHeight;
     int                     *allocBlocks;
     int                     numTextures;
-    int                     samples;
     int                     extraSamples;
-    float                   ambience;
     int                     tracedTexels;
 };
 

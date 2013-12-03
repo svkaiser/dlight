@@ -37,6 +37,7 @@ public:
     void                Close(void);
     bool                Exists(const char *file);
     int                 Length(void);
+    void                Duplicate(const char *newFileName);
 
     byte                Read8(void);
     short               Read16(void);
