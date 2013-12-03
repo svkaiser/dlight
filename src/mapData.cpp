@@ -74,15 +74,15 @@ kexDoomMap::~kexDoomMap(void) {
 //
 
 void kexDoomMap::BuildMapFromWad(kexWadFile &wadFile) {
-    wadFile.GetMapLump<mapThing_t>("THINGS", &mapThings, &numThings);
-    wadFile.GetMapLump<mapVertex_t>("VERTEXES", &mapVerts, &numVerts);
-    wadFile.GetMapLump<mapLineDef_t>("LINEDEFS", &mapLines, &numLines);
-    wadFile.GetMapLump<mapSideDef_t>("SIDEDEFS", &mapSides, &numSides);
-    wadFile.GetMapLump<mapSector_t>("SECTORS", &mapSectors, &numSectors);
-    wadFile.GetMapLump<mapSeg_t>("SEGS", &mapSegs, &numSegs);
-    wadFile.GetMapLump<mapSubSector_t>("SSECTORS", &mapSSects, &numSSects);
-    wadFile.GetMapLump<mapNode_t>("NODES", &nodes, &numNodes);
-    wadFile.GetMapLump<mapLightInfo_t>("LIGHTS", &lightInfos, &numLightInfos);
+    wadFile.GetMapLump<mapThing_t>(ML_THINGS, &mapThings, &numThings);
+    wadFile.GetMapLump<mapVertex_t>(ML_VERTEXES, &mapVerts, &numVerts);
+    wadFile.GetMapLump<mapLineDef_t>(ML_LINEDEFS, &mapLines, &numLines);
+    wadFile.GetMapLump<mapSideDef_t>(ML_SIDEDEFS, &mapSides, &numSides);
+    wadFile.GetMapLump<mapSector_t>(ML_SECTORS, &mapSectors, &numSectors);
+    wadFile.GetMapLump<mapSeg_t>(ML_SEGS, &mapSegs, &numSegs);
+    wadFile.GetMapLump<mapSubSector_t>(ML_SUBSECTORS, &mapSSects, &numSSects);
+    wadFile.GetMapLump<mapNode_t>(ML_NODES, &nodes, &numNodes);
+    wadFile.GetMapLump<mapLightInfo_t>(ML_LIGHTS, &lightInfos, &numLightInfos);
 
     if(mapSegs == NULL) {
         Error("kexDoomMap::BuildMapFromWad: SEGS lump not found\n");
@@ -119,7 +119,7 @@ void kexDoomMap::BuildLeafs(kexWadFile &wadFile) {
     int     size;
     int     count;
 
-    lump = wadFile.GetLumpFromName("LEAFS");
+    lump = wadFile.GetMapLump(ML_LEAFS);
 
     if(lump == NULL) {
         Error("kexDoomMap::BuildLeafs: LEAFS lump not found\n");

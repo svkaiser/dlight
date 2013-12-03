@@ -27,41 +27,71 @@
 
 #include "kexlib/binFile.h"
 
+typedef enum {
+    ML_HEADER               = 0,
+    ML_THINGS,
+    ML_LINEDEFS,
+    ML_SIDEDEFS,
+    ML_VERTEXES,
+    ML_SEGS,
+    ML_SUBSECTORS,
+    ML_NODES,
+    ML_SECTORS,
+    ML_REJECT,
+    ML_BLOCKMAP,
+    ML_LEAFS,
+    ML_LIGHTS,
+    ML_MACROS,
+    ML_LIGHTMAP,
+    ML_NUMLUMPS
+} mapLumps_t;
+
 typedef struct {
-    char            id[4];
-    int             lmpcount;
-    int             lmpdirpos;
+    char                id[4];
+    int                 lmpcount;
+    int                 lmpdirpos;
 } wadHeader_t;
 
 typedef struct {
-    int             filepos;
-    int             size;
-    char            name[8];
+    int                 filepos;
+    int                 size;
+    char                name[8];
 } lump_t;
 
 class kexWadFile {
 public:
-                    ~kexWadFile(void);
+                        ~kexWadFile(void);
 
-    wadHeader_t     header;
-    lump_t          *lumps;
-    unsigned int    size;
+    wadHeader_t         header;
+    lump_t              *lumps;
+    unsigned int        size;
+    int                 mapLumpID;
+    kexStr              wadName;
 
-    lump_t          *GetLumpFromName(const char *name);
-    byte            *GetLumpData(const lump_t *lump);
-    byte            *GetLumpData(const char *name);
-    bool            Open(const char *fileName);
-    void            Close(void);
+    lump_t              *GetLumpFromName(const char *name);
+    lump_t              *GetMapLump(mapLumps_t lumpID);
+    byte                *GetLumpData(const lump_t *lump);
+    byte                *GetLumpData(const char *name);
+    void                SetCurrentMap(const int map);    
+    bool                Open(const char *fileName);
+    void                Close(void);
+    void                BuildNewWad(byte *lightmapLump, const int size);
 
     template<typename type>
-    void            GetMapLump(const char *name, type **ptr, int *count) {
-        lump_t *lump = GetLumpFromName(name);
+    void                GetMapLump(mapLumps_t lumpID, type **ptr, int *count) {
+        if(mapLumpID + lumpID >= header.lmpcount) {
+            return;
+        }
+        lump_t *lump = GetMapLump(lumpID);
+        if(lump == NULL) {
+            return;
+        }
         *ptr = (type*)GetLumpData(lump);
         *count = lump->size / sizeof(type);
     }
 
 private:
-    kexBinFile      file;
+    kexBinFile          file;
 };
 
 #endif

@@ -579,6 +579,8 @@ void kexLightmapBuilder::TraceSurface(surface_t *surface) {
 //
 
 void kexLightmapBuilder::CreateLightmaps(kexDoomMap &doomMap) {
+    unsigned int i;
+
     trace.Init(doomMap);
     AddThingLights(doomMap);
 
@@ -586,7 +588,7 @@ void kexLightmapBuilder::CreateLightmaps(kexDoomMap &doomMap) {
 
     printf("------------- Building lightmap -------------\n");
 
-    for(unsigned int i = 0; i < surfaces.Length(); i++) {
+    for(i = 0; i < surfaces.Length(); i++) {
         printf("Lighting surface %03d: ", i);
         BuildSurfaceParams(surfaces[i]);
         TraceSurface(surfaces[i]);
@@ -594,6 +596,11 @@ void kexLightmapBuilder::CreateLightmaps(kexDoomMap &doomMap) {
     }
 
     printf("\nTexels traced: %i\n\n", tracedTexels);
+
+    for(i = 0; i < thingLights.Length(); i++) {
+        // all light things should never be loaded in doom
+        thingLights[i]->options = 0;
+    }
 }
 
 //

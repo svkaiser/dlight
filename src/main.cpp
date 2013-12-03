@@ -35,28 +35,6 @@
 #include "lightmap.h"
 
 //
-// isDigit
-//
-
-static bool isDigit(int x) {
-    return ((x) >= '0') && ((x) <= '9');
-}
-
-//
-// isSpace
-//
-
-static bool isSpace(int x) {
-    return
-        ((x) == ' ') ||
-        ((x) == '\t') ||
-        ((x) == '\r') ||
-        ((x) == '\n') ||
-        ((x) == '\f') ||
-        ((x) == '\v');
-}
-
-//
 // Error
 //
 
@@ -94,16 +72,105 @@ int main(int argc, char **argv) {
     kexDoomMap doomMap;
     kexLightmapBuilder builder;
     int size;
+    int map = 1;
+    int arg = 1;
 
-    if(!argv[1]) {
+    printf("DLight (c) 2013-2014 Samuel Villarreal\n\n");
+
+    if(argc < 1 || argv[1] == NULL) {
+        printf("Usage: dlight [options] [wadfile]\n");
         return 0;
     }
 
-    if(!wadFile.Open(argv[1])) {
+    while(1) {
+        if(!strcmp(argv[arg], "-help")) {
+            printf("Options:\n");
+            printf("-help:              displays all known options\n");
+            printf("-map:               process lightmap for MAP##\n");
+            printf("-samples:           set texel sampling size (lowest = higher quaility but\n");
+            printf("                    slow compile time) must be in powers of two\n");
+            printf("-ambience:          set global ambience value for lightmaps (0.0 - 1.0)\n");
+            printf("-size:              lightmap texture dimentions for width and height\n");
+            printf("                    must be in powers of two (1, 2, 4, 8, 16, etc)\n");
+            arg++;
+            return 0;
+        }
+        else if(!strcmp(argv[arg], "-map")) {
+            if(argv[arg+1] == NULL) {
+                Error("Specify map number for -map\n");
+                return 1;
+            }
+
+            map = atoi(argv[++arg]);
+            arg++;
+        }
+        else if(!strcmp(argv[arg], "-samples")) {
+            if(argv[arg+1] == NULL) {
+                Error("Specify value for -samples\n");
+                return 1;
+            }
+
+            builder.samples = atoi(argv[++arg]);
+            if(builder.samples <= 0) {
+                builder.samples = 1;
+            }
+            if(builder.samples > 128) {
+                builder.samples = 128;
+            }
+
+            builder.samples = kexMath::RoundPowerOfTwo(builder.samples);
+        }
+        else if(!strcmp(argv[arg], "-ambience")) {
+            if(argv[arg+1] == NULL) {
+                Error("Specify value for -ambience\n");
+                return 1;
+            }
+
+            builder.ambience = (float)atof(argv[++arg]);
+            if(builder.ambience < 0) {
+                builder.ambience = 0;
+            }
+            if(builder.ambience > 1) {
+                builder.ambience = 1;
+            }
+        }
+        else if(!strcmp(argv[arg], "-size")) {
+            int lmDims;
+
+            if(argv[arg+1] == NULL) {
+                Error("Specify value for -size\n");
+                return 1;
+            }
+
+            lmDims = atoi(argv[++arg]);
+            if(lmDims <= 0) {
+                lmDims = 1;
+            }
+            if(lmDims > LIGHTMAP_MAX_SIZE) {
+                lmDims = LIGHTMAP_MAX_SIZE;
+            }
+
+            lmDims = kexMath::RoundPowerOfTwo(lmDims);
+
+            builder.textureWidth = lmDims;
+            builder.textureHeight = lmDims;
+        }
+        else {
+            break;
+        }
+    }
+
+    if(argv[arg] == NULL) {
+        printf("Usage: dlight [options] [wadfile]\n");
+        return 0;
+    }
+
+    if(!wadFile.Open(argv[arg])) {
         return 1;
     }
 
     printf("------------- Building level structures -------------\n\n");
+    wadFile.SetCurrentMap(map);
     doomMap.BuildMapFromWad(wadFile);
 
     printf("------------- Allocating surfaces from level -------------\n\n");
@@ -112,16 +179,15 @@ int main(int argc, char **argv) {
     printf("------------- Creating lightmaps -------------\n\n");
     builder.CreateLightmaps(doomMap);
     builder.WriteTexturesToTGA();
+
+    printf("------------- Creating lightmap lump -------------\n\n");
     byte *lm = builder.CreateLightmapLump(&size);
 
-    FILE *f = fopen("LIGHTMAP.lmp", "wb");
-    fwrite(lm, 1, size, f);
-    fclose(f);
-
-    printf("Done\n\n");
-
+    printf("------------- Rebuilding wad -------------\n\n");
+    wadFile.BuildNewWad(lm, size);
     wadFile.Close();
-    Mem_Purge(hb_static);
 
+    printf("------------- Shutting down -------------\n\n");
+    Mem_Purge(hb_static);
     return 0;
 }

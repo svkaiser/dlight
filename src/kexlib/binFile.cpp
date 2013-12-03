@@ -139,6 +139,27 @@ bool kexBinFile::Exists(const char *file) {
 }
 
 //
+// kexBinFile::Duplicate
+//
+
+void kexBinFile::Duplicate(const char *newFileName) {
+    FILE *f;
+
+    if(bOpened == false) {
+        return;
+    }
+
+    f = fopen(newFileName, "wb");
+
+    if(f == NULL) {
+        return;
+    }
+
+    fwrite(buffer, Length(), 1, f);
+    fclose(f);
+}
+
+//
 // kexBinFile::Length
 //
 
