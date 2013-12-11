@@ -155,8 +155,6 @@ void kexTrace::TraceSurface(surface_t *surface) {
 
             p.SetLine(v2, v1);
 
-            d = r.InnerProduct(p);
-
             if(r.InnerProduct(p) > 0) {
                 return;
             }
