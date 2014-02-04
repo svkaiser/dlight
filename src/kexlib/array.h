@@ -38,7 +38,7 @@ public:
     void                EmptyContents(void);
     type                IndexOf(unsigned int index) const;
     void                Splice(const unsigned int start, unsigned int len);
-    const unsigned int  Length(void) const { return length; }
+    unsigned int        Length(void) const { return length; }
     void                IsPointer(bool IsPointer) { bPointer = IsPointer; }
     type                GetData(const int index) { return data[index]; }
 
@@ -212,7 +212,7 @@ type &kexArray<type>::operator[](unsigned int index) {
 //
 template <class type>
 kexPtrArray<type>::kexPtrArray(void) {
-    bPointer = true;
+    kexArray<type>::bPointer = true;
 }
 
 //
@@ -228,9 +228,9 @@ kexPtrArray<type>::~kexPtrArray() {
 //
 template<class type>
 void kexPtrArray<type>::DeleteContents(void) {
-    for(unsigned int i = 0; i < length; i++) {
-        delete (void*)data[i];
-        data[i] = NULL;
+    for(unsigned int i = 0; i < kexArray<type>::length; i++) {
+        delete kexArray<type>::data[i];
+        kexArray<type>::data[i] = NULL;
     }
 }
 

@@ -27,6 +27,8 @@
 //
 //-----------------------------------------------------------------------------
 
+#include <cerrno>
+
 #include "common.h"
 #include "kexlib/binFile.h"
 
