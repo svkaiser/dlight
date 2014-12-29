@@ -6,3 +6,6 @@
 /bin/*.exe
 /bin/*.ilk
 /bin/*.pdb
+
+# Mac crap
+.DS_Store

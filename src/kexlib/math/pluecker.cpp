@@ -1,26 +1,26 @@
 //
 // Copyright (c) 2013-2014 Samuel Villarreal
 // svkaiser@gmail.com
-// 
+//
 // This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
 // arising from the use of this software.
-// 
+//
 // Permission is granted to anyone to use this software for any purpose,
 // including commercial applications, and to alter it and redistribute it
 // freely, subject to the following restrictions:
-// 
+//
 //    1. The origin of this software must not be misrepresented; you must not
 //    claim that you wrote the original software. If you use this software
 //    in a product, an acknowledgment in the product documentation would be
 //    appreciated but is not required.
-// 
- //   2. Altered source versions must be plainly marked as such, and must not be
- //   misrepresented as being the original software.
-// 
+//
+//   2. Altered source versions must be plainly marked as such, and must not be
+//   misrepresented as being the original software.
+//
 //    3. This notice may not be removed or altered from any source
 //    distribution.
-// 
+//
 //-----------------------------------------------------------------------------
 //
 // DESCRIPTION: Pluecker operations
@@ -35,7 +35,8 @@
 // kexPluecker::kexPluecker
 //
 
-kexPluecker::kexPluecker(void) {
+kexPluecker::kexPluecker(void)
+{
     Clear();
 }
 
@@ -43,7 +44,8 @@ kexPluecker::kexPluecker(void) {
 // kexPluecker::kexPluecker
 //
 
-kexPluecker::kexPluecker(const kexVec3 &start, const kexVec3 &end, bool bRay) {
+kexPluecker::kexPluecker(const kexVec3 &start, const kexVec3 &end, bool bRay)
+{
     bRay ? SetRay(start, end) : SetLine(start, end);
 }
 
@@ -51,7 +53,8 @@ kexPluecker::kexPluecker(const kexVec3 &start, const kexVec3 &end, bool bRay) {
 // kexPluecker::Clear
 //
 
-void kexPluecker::Clear(void) {
+void kexPluecker::Clear(void)
+{
     p[0] = p[1] = p[2] = p[3] = p[4] = p[5] = 0;
 }
 
@@ -59,7 +62,8 @@ void kexPluecker::Clear(void) {
 // kexPluecker::SetLine
 //
 
-void kexPluecker::SetLine(const kexVec3 &start, const kexVec3 &end) {
+void kexPluecker::SetLine(const kexVec3 &start, const kexVec3 &end)
+{
     p[0] = start.x * end.y - end.x * start.y;
     p[1] = start.x * end.z - end.x * start.z;
     p[3] = start.y * end.z - end.y * start.z;
@@ -73,7 +77,8 @@ void kexPluecker::SetLine(const kexVec3 &start, const kexVec3 &end) {
 // kexPluecker::SetRay
 //
 
-void kexPluecker::SetRay(const kexVec3 &start, const kexVec3 &dir) {
+void kexPluecker::SetRay(const kexVec3 &start, const kexVec3 &dir)
+{
     p[0] = start.x * dir.y - dir.x * start.y;
     p[1] = start.x * dir.z - dir.x * start.z;
     p[3] = start.y * dir.z - dir.y * start.z;
@@ -87,7 +92,8 @@ void kexPluecker::SetRay(const kexVec3 &start, const kexVec3 &dir) {
 // kexPluecker::InnerProduct
 //
 
-float kexPluecker::InnerProduct(const kexPluecker &pluecker) const {
+float kexPluecker::InnerProduct(const kexPluecker &pluecker) const
+{
     return
         p[0] * pluecker.p[4] +
         p[1] * pluecker.p[5] +

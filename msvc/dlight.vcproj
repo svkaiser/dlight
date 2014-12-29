@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\src\"
+				AdditionalIncludeDirectories=".;..\src\;..\src\pthreads_win32\include\"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -61,6 +61,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="../src/pthreads_win32/lib/x86/pthreadVSE2.lib"
 				OutputFile="$(OutDir)\..\..\bin\$(ProjectName).exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
@@ -115,10 +116,14 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
+				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
+				FavorSizeOrSpeed="1"
+				AdditionalIncludeDirectories=".;..\src\;..\src\pthreads_win32\include\"
+				PreprocessorDefinitions="WIN32;_CONSOLE;_CRT_SECURE_NO_WARNINGS"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
+				EnableEnhancedInstructionSet="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="3"
@@ -134,6 +139,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="../src/pthreads_win32/lib/x86/pthreadVSE2.lib"
+				OutputFile="$(OutDir)\..\..\bin\$(ProjectName).exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="1"
@@ -177,6 +184,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\lightSurface.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\main.cpp"
 				>
 			</File>
@@ -196,6 +207,10 @@
 				RelativePath="..\src\wad.cpp"
 				>
 			</File>
+			<File
+				RelativePath="..\src\worker.cpp"
+				>
+			</File>
 			<Filter
 				Name="kexlib"
 				>
@@ -209,6 +224,10 @@
 				</File>
 				<File
 					RelativePath="..\src\kexlib\memHeap.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\kexlib\parser.cpp"
 					>
 				</File>
 				<Filter
@@ -267,6 +286,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\lightSurface.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\mapData.h"
 				>
 			</File>
@@ -280,6 +303,10 @@
 			</File>
 			<File
 				RelativePath="..\src\wad.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\worker.h"
 				>
 			</File>
 			<Filter
@@ -299,6 +326,10 @@
 				</File>
 				<File
 					RelativePath="..\src\kexlib\memHeap.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\kexlib\parser.h"
 					>
 				</File>
 				<Filter
