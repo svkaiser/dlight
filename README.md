@@ -1,6 +1,5 @@
-===========================================================================
     Using DLight
-===========================================================================
+=======================================
 
     Before building lightmaps, the wad file must first be pre-compiled with
     GL nodes using GLBSP (http://glbsp.sourceforge.net/). Optionally, PVS
@@ -45,9 +44,8 @@
     
     -ambience <##>          UNUSED
     
-===========================================================================
     DLight Configuration File Specification
-===========================================================================
+=======================================
 
     Format:
             /*
@@ -161,9 +159,8 @@
         falloff <float>             Sets the falloff for this light
                                     (expiremental)
     
-===========================================================================
     Map Lump Specifications
-===========================================================================
+=======================================
 
     LM_MAP##                        Level marker
     
@@ -183,4 +180,3 @@
                                     
     LM_LMAPS                        Contains raw RGB texture data that makes
                                     up the lightmaps.
-                                    
