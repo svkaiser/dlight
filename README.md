@@ -1,5 +1,4 @@
-    Using DLight
-=======================================
+# Using DLight
 
     Before building lightmaps, the wad file must first be pre-compiled with
     GL nodes using GLBSP (http://glbsp.sourceforge.net/). Optionally, PVS
@@ -13,9 +12,7 @@
     As of version 2.0, DLight can only compile one map at a time so the
     -map option is required.
     
-===========================================================================
-    Options
-===========================================================================
+# Options
     
     -map <1-99>             Specify the map number to compile for
     
@@ -44,8 +41,7 @@
     
     -ambience <##>          UNUSED
     
-    DLight Configuration File Specification
-=======================================
+# DLight Configuration File Specification
 
     Format:
             /*
@@ -159,8 +155,7 @@
         falloff <float>             Sets the falloff for this light
                                     (expiremental)
     
-    Map Lump Specifications
-=======================================
+# Map Lump Specifications
 
     LM_MAP##                        Level marker
     
